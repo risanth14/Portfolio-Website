@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import SkillsGlobe from './components/SkillsGlobe'
+import profileImage from './components/images/Profile Picture.jpg'
 
 type Repo = {
   id: number
@@ -421,7 +422,7 @@ function App() {
           <div className="theme-panel relative flex min-h-[460px] flex-col items-center justify-center overflow-hidden rounded-3xl border p-6 sm:min-h-[500px]">
             <div className="theme-glow absolute -right-10 -top-10 h-44 w-44 rounded-full blur-3xl" />
             <div className="h-56 w-56 overflow-hidden rounded-full border-2 border-amber-300/60 bg-gradient-to-br from-slate-700 to-slate-900 shadow-[0_0_40px_rgba(88,166,255,0.35)] sm:h-64 sm:w-64">
-              <img src="/placeholder-avatar.svg" alt="Profile placeholder" className="h-full w-full object-cover" />
+              <img src={profileImage} alt="Risanth profile" className="h-full w-full object-cover" />
             </div>
             <div className="mt-6 w-full space-y-4 text-center sm:mt-8">
               <p className="font-[Space_Grotesk] text-lg font-semibold sm:text-xl">Risanth | Full-Stack Developer</p>
@@ -449,19 +450,49 @@ function App() {
         </section>        <SkillsGlobe theme={theme} />
 
         <section id="about" className="pt-20">
-          <h2 className="font-[Space_Grotesk] text-3xl font-bold md:text-4xl">About</h2>
-          <p className="theme-muted mt-4 max-w-3xl">
-            I enjoy turning ideas into polished products. My approach combines thoughtful frontend design, solid backend
-            architecture, and measurable delivery. I optimize for quality, speed, and maintainability.
+          <p className="theme-eyebrow text-center text-xs font-semibold uppercase tracking-[0.22em]">About</p>
+          <h2 className="mx-auto mt-4 max-w-5xl pb-2 text-center font-[Space_Grotesk] text-4xl font-bold leading-[1.16] tracking-tight sm:text-5xl md:text-[3.6rem]">
+            Software Engineering Co-op student
+            <span className="block bg-gradient-to-r from-amber-300 via-amber-200 to-blue-300 bg-clip-text text-transparent">
+              delivering measurable web impact
+            </span>
+          </h2>
+
+          <p className="theme-muted mx-auto mt-5 max-w-3xl text-center text-base leading-8 md:text-lg">
+            Ontario Tech Software Engineering student building maintainable web applications with measurable results,
+            including 35% traffic growth and 30% fewer manual follow-ups.
           </p>
-          <div className="mt-6 flex flex-wrap gap-2.5 text-sm">
-            {['Full-Stack Development', 'React + TypeScript', 'Node + APIs', 'AI Integration', 'Problem Solving'].map(
-              (chip) => (
-                <span key={chip} className="theme-chip rounded-full border px-4 py-2">
-                  {chip}
-                </span>
-              ),
-            )}
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            <article className="theme-panel rounded-3xl border p-6">
+              <p className="text-xl">🎓</p>
+              <h3 className="mt-4 font-[Space_Grotesk] text-2xl font-semibold">University</h3>
+              <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Ontario Tech University</p>
+              <p className="theme-muted mt-4 text-sm leading-7">
+                Bachelor of Engineering in Software Engineering Co-op (Honours), with coursework across algorithms,
+                data structures, databases, AI, and web programming.
+              </p>
+            </article>
+
+            <article className="theme-panel rounded-3xl border p-6">
+              <p className="text-xl">💼</p>
+              <h3 className="mt-4 font-[Space_Grotesk] text-2xl font-semibold">Experience</h3>
+              <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Web Development + Operations</p>
+              <p className="theme-muted mt-4 text-sm leading-7">
+                Delivered production website improvements at Lex Marketing Inc and Dancing DJ Andre, and currently work
+                at Walmart where I support fast-paced operations with consistency, safety, and execution discipline.
+              </p>
+            </article>
+
+            <article className="theme-panel rounded-3xl border p-6">
+              <p className="text-xl">📈</p>
+              <h3 className="mt-4 font-[Space_Grotesk] text-2xl font-semibold">Projects</h3>
+              <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Full-Stack Builds</p>
+              <p className="theme-muted mt-4 text-sm leading-7">
+                Built projects like Forge Fit (React + Firebase), a Flask leave-of-absence dashboard with PostgreSQL,
+                and a browser-based version control editor with undo/redo and snapshot history.
+              </p>
+            </article>
           </div>
         </section>
 
@@ -502,7 +533,7 @@ function App() {
                     >
                       <p className="font-semibold">{repo.name}</p>
                       <p className="theme-muted mt-1 text-xs">
-                        {repo.language || 'Mixed'} � Updated {new Date(repo.updated_at).toLocaleDateString()}
+                        {repo.language || 'Mixed'} � Updated {new Date(repo.updated_at).toLocaleDateString()}
                       </p>
                     </a>
                   ))}
