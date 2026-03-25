@@ -1,0 +1,8 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <rect x="8" y="8" width="164" height="164" rx="14" fill="#f0f0f0"/>
+  <g transform="translate(90 70)">
+    <path d="M0-36c22 18 27 41 8 58c-14 12-30 11-44 0c-13-10-13-28-2-43c8-11 20-18 38-15z" fill="#ff9100"/>
+    <path d="M-8-40c14 12 17 30 4 44c-9 10-24 10-36 0c-11-10-11-24-2-36c9-12 19-14 34-8z" fill="#ffc400" opacity="0.85"/>
+  </g>
+  <text x="90" y="142" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" fill="#616161" font-weight="500">Firebase</text>
+</svg>
