@@ -399,8 +399,8 @@ function App() {
         <section className="grid min-h-[78vh] items-center gap-8 py-4 md:grid-cols-[1.15fr_0.85fr] md:py-8">
           <div>
             <p className="theme-eyebrow mb-3 text-xs font-semibold uppercase tracking-[0.26em]">Software Developer</p>
-            <h1 className="font-[Space_Grotesk] text-4xl font-bold leading-[1.06] tracking-tight sm:text-5xl md:text-6xl">
-              Building AI-ready products and backend systems that ship.
+            <h1 className="font-[Space_Grotesk] text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl md:text-[3.1rem]">
+              Building user-focused web products that ship.
             </h1>
             <p className="theme-muted mt-5 max-w-2xl text-base leading-7 md:text-lg">
               I am Risanth, a full-stack developer actively seeking co-op opportunities. I build clean, scalable
@@ -451,9 +451,9 @@ function App() {
 
         <section id="about" className="pt-20">
           <p className="theme-eyebrow text-center text-xs font-semibold uppercase tracking-[0.22em]">About</p>
-          <h2 className="mx-auto mt-4 max-w-5xl pb-2 text-center font-[Space_Grotesk] text-4xl font-bold leading-[1.16] tracking-tight sm:text-5xl md:text-[3.6rem]">
+          <h2 className="mx-auto mt-4 max-w-5xl pb-4 text-center font-[Space_Grotesk] text-4xl font-bold leading-[1.22] tracking-tight sm:text-5xl md:text-[3.6rem]">
             Software Engineering Co-op student
-            <span className="block bg-gradient-to-r from-amber-300 via-amber-200 to-blue-300 bg-clip-text text-transparent">
+            <span className="block pt-1 pb-2 bg-gradient-to-r from-amber-300 via-amber-200 to-blue-300 bg-clip-text text-transparent">
               delivering measurable web impact
             </span>
           </h2>
