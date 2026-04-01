@@ -48,6 +48,7 @@ type GithubReposApiResponse = {
     is_pinned?: boolean
     pinned_index?: number | null
   }>
+  pinned_order?: string[]
   total_count?: number
 }
 
@@ -240,15 +241,7 @@ function App() {
         .filter((repo) => pinnedOrder.has(repo.name.toLowerCase()))
         .sort((a, b) => (pinnedOrder.get(a.name.toLowerCase()) ?? 999) - (pinnedOrder.get(b.name.toLowerCase()) ?? 999))
 
-      const nonPinned = [...userRepos]
-        .filter((repo) => !pinnedOrder.has(repo.name.toLowerCase()))
-        .sort(
-          (a, b) =>
-            b.stargazers_count - a.stargazers_count ||
-            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-        )
-
-      const featuredRaw = [...pinnedRepos, ...nonPinned].slice(0, 6)
+      const featuredRaw = pinnedRepos.slice(0, 6)
       const visibleRaw = sortedRepos
 
       const toRepoView = (repo: Repo): RepoView => ({

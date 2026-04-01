@@ -245,7 +245,6 @@ async function handler(event) {
     )
 
     const repos = repoNodes
-      .filter((repo) => !repo?.isFork)
       .filter((repo) => repo?.owner?.login?.toLowerCase() === username.toLowerCase())
       .map((repo) => toRepoView(repo, pinnedIndexMap))
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
