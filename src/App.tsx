@@ -30,6 +30,7 @@ type RepoView = Repo & {
 
 type ChatRole = 'user' | 'bot'
 type ThemeMode = 'dark' | 'light'
+type ContactStatus = 'idle' | 'sending' | 'success' | 'error'
 
 type ChatMessage = {
   id: number
@@ -38,7 +39,7 @@ type ChatMessage = {
 }
 
 const GITHUB_USER = 'risanth14'
-const OPENAI_KEY_STORAGE = 'portfolio_openai_key'
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mjgpovgp'
 const THEME_STORAGE = 'portfolio_theme_mode'
 const PROJECT_REFRESH_MS = 60_000
 
@@ -61,18 +62,66 @@ const navItems = [
   { id: 'contact', label: 'Contact' },
 ]
 
-const timeline = [
+const experienceTimeline = [
   {
-    heading: 'Software Development Journey',
-    text: 'Built and shipped multiple web applications with a focus on usability, reliability, and scalability.',
+    id: 'exp-01',
+    company: 'SGMC Canada',
+    location: 'Toronto, ON',
+    period: 'Jan 2026 - Apr 2026',
+    bullets: [
+      'Engineered a full-stack recruitment platform using Next.js, React, Node.js, and PostgreSQL for onboarding, role-based access, and dashboard workflows.',
+      'Integrated Stripe payments and deployed services on AWS (EC2, S3) to support secure transactions and reliable release cycles.',
+      'Optimized backend APIs and query paths to improve responsiveness and scalability across core user workflows.',
+    ],
+    tags: ['Next.js', 'React', 'Node.js', 'PostgreSQL', 'AWS', 'Stripe'],
   },
   {
-    heading: 'Computer Science Foundation',
-    text: 'Applied data structures, algorithms, and software engineering principles in real-world projects.',
+    id: 'exp-02',
+    company: 'Solora Tech',
+    location: 'Toronto, ON',
+    period: 'Sep 2025 - Dec 2025',
+    bullets: [
+      'Developed and shipped a scalable full-stack platform using React, Node.js, and Express with a production-ready UI.',
+      'Designed and optimized REST APIs plus backend data flows to reduce latency and improve application responsiveness.',
+      'Partnered across frontend and backend to deliver reliable end-to-end feature integration and stable releases.',
+    ],
+    tags: ['React', 'Node.js', 'Express', 'REST APIs'],
   },
   {
-    heading: 'Collaboration and Delivery',
-    text: 'Worked through iterative feedback loops to deliver polished features quickly and safely.',
+    id: 'exp-03',
+    company: 'LEX Marketing Inc.',
+    location: 'Toronto, ON',
+    period: 'May 2025 - Aug 2025',
+    bullets: [
+      'Redesigned client websites with modern UI/UX principles to improve usability and engagement.',
+      'Migrated sites from Weebly to WordPress, streamlining content workflows and improving maintainability.',
+      'Improved mobile responsiveness and SEO foundations for better performance and accessibility across devices.',
+    ],
+    tags: ['WordPress', 'SEO', 'Responsive Design', 'UI/UX'],
+  },
+  {
+    id: 'exp-04',
+    company: 'Brazily Fitness Inc.',
+    location: 'Toronto, ON',
+    period: 'Jan 2025 - Apr 2025',
+    bullets: [
+      'Built and launched a promotional website that highlighted services, class content, and booking pathways.',
+      'Refined site architecture, visual hierarchy, and content layout to improve navigation clarity and conversion flow.',
+      'Strengthened technical SEO, page consistency, and handoff documentation to support long-term maintainability.',
+    ],
+    tags: ['Front-End Development', 'SEO', 'Web Content Strategy'],
+  },
+  {
+    id: 'exp-05',
+    company: 'Walmart',
+    location: 'Whitby, ON',
+    period: 'Sep 2024 - Present',
+    bullets: [
+      'Coordinated inbound freight unloading, pallet staging, and cross-department stocking to keep daily floor operations on schedule.',
+      'Maintained inventory accuracy through disciplined overstock labeling, shelf placement, and backroom organization standards.',
+      'Consistently supported safety-first execution in a fast-paced environment while collaborating effectively across teams.',
+    ],
+    tags: ['Operations', 'Inventory Control', 'Team Collaboration', 'Safety'],
   },
 ]
 
@@ -115,8 +164,12 @@ function App() {
     },
   ])
   const [chatBusy, setChatBusy] = useState(false)
-  const [apiKeyInput, setApiKeyInput] = useState('')
   const [selectedRepo, setSelectedRepo] = useState<RepoView | null>(null)
+  const [contactName, setContactName] = useState('')
+  const [contactEmail, setContactEmail] = useState('')
+  const [contactMessage, setContactMessage] = useState('')
+  const [contactStatus, setContactStatus] = useState<ContactStatus>('idle')
+  const [contactStatusText, setContactStatusText] = useState('')
   const cursorBubbleRef = useRef<HTMLDivElement | null>(null)
   const cursorDotRef = useRef<HTMLDivElement | null>(null)
   const currentYear = useMemo(() => new Date().getFullYear(), [])
@@ -262,14 +315,6 @@ function App() {
     }
   }
 
-  function saveApiKey() {
-    const trimmed = apiKeyInput.trim()
-    if (!trimmed) return
-    localStorage.setItem(OPENAI_KEY_STORAGE, trimmed)
-    setApiKeyInput('')
-    pushMessage('bot', 'API key saved in this browser. You can now ask AI-powered questions.')
-  }
-
   function pushMessage(role: ChatRole, content: string) {
     setChatMessages((prev) => [...prev, { id: Date.now() + Math.random(), role, content }])
   }
@@ -307,38 +352,26 @@ function App() {
   }
 
   async function askOpenAI(question: string) {
-    const key = localStorage.getItem(OPENAI_KEY_STORAGE)
-    if (!key) return null
-
-    const response = await fetch('https://api.openai.com/v1/responses', {
+    const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${key}`,
       },
-      body: JSON.stringify({
-        model: 'gpt-4.1-mini',
-        input: [
-          {
-            role: 'system',
-            content:
-              'You are an assistant for Risanth\'s portfolio. Be concise, factual, and only answer about his projects, skills, and experience.',
-          },
-          {
-            role: 'user',
-            content: question,
-          },
-        ],
-        max_output_tokens: 180,
-      }),
+      body: JSON.stringify({ question }),
     })
 
-    if (!response.ok) {
-      throw new Error(`OpenAI error ${response.status}`)
+    let data: { answer?: string; detail?: string; error?: string } = {}
+    try {
+      data = (await response.json()) as { answer?: string; detail?: string; error?: string }
+    } catch {
+      data = {}
     }
 
-    const data = (await response.json()) as { output_text?: string }
-    return data.output_text?.trim() ?? null
+    if (!response.ok) {
+      throw new Error(data.detail || data.error || `Chat API error ${response.status}`)
+    }
+
+    return data.answer?.trim() ?? null
   }
 
   async function onSendMessage(event: FormEvent<HTMLFormElement>) {
@@ -357,10 +390,74 @@ function App() {
       } else {
         pushMessage('bot', localReply(trimmed))
       }
-    } catch {
-      pushMessage('bot', localReply(trimmed))
+    } catch (error) {
+      console.error(error)
+      const detail = error instanceof Error ? error.message : ''
+      pushMessage('bot', detail ? `Chat service issue: ${detail}` : localReply(trimmed))
     } finally {
       setChatBusy(false)
+    }
+  }
+
+  async function onSubmitContactForm(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (contactStatus === 'sending') return
+
+    const trimmedName = contactName.trim()
+    const trimmedEmail = contactEmail.trim()
+    const trimmedMessage = contactMessage.trim()
+
+    if (!trimmedName || !trimmedEmail || !trimmedMessage) {
+      setContactStatus('error')
+      setContactStatusText('Please fill out your name, email, and message.')
+      return
+    }
+
+    setContactStatus('sending')
+    setContactStatusText('Sending message...')
+
+    try {
+      const response = await fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          subject: 'New portfolio contact form message',
+          name: trimmedName,
+          email: trimmedEmail,
+          message: trimmedMessage,
+        }),
+      })
+
+      let payload: { message?: string; errors?: Array<{ message?: string }>; error?: string; detail?: string } | null = null
+      try {
+        payload = (await response.json()) as { message?: string; errors?: Array<{ message?: string }>; error?: string; detail?: string }
+      } catch {
+        payload = null
+      }
+
+      if (!response.ok) {
+        const detail =
+          payload?.errors?.[0]?.message ||
+          payload?.message ||
+          payload?.detail ||
+          payload?.error ||
+          `status ${response.status}`
+        throw new Error(`Form submit failed: ${detail}`)
+      }
+
+      setContactName('')
+      setContactEmail('')
+      setContactMessage('')
+      setContactStatus('success')
+      setContactStatusText('Message sent successfully. I will get back to you soon.')
+    } catch (error) {
+      console.error(error)
+      setContactStatus('error')
+      const detail = error instanceof Error ? error.message : 'Could not send message right now.'
+      setContactStatusText(`Could not send message. ${detail}`)
     }
   }
 
@@ -394,7 +491,7 @@ function App() {
 
           <nav className="hidden items-center gap-9 md:flex xl:gap-11">
             {navItems.map((item) => (
-              <a key={item.id} href={`#${item.id}`} className="theme-nav-link theme-nav-link-animated text-[1.03rem] font-medium">
+              <a key={item.id} href={`#${item.id}`} className="theme-nav-link theme-nav-link-animated font-[Space_Grotesk] text-[1.03rem] font-medium">
                 {item.label}
               </a>
             ))}
@@ -451,7 +548,7 @@ function App() {
               <a
                 key={item.id}
                 href={`#${item.id}`}
-                className="theme-nav-link theme-nav-link-animated font-medium"
+                className="theme-nav-link theme-nav-link-animated font-[Space_Grotesk] font-medium"
                 onClick={() => setMenuOpen(false)}
               >
                 {item.label}
@@ -512,8 +609,8 @@ function App() {
               <a href="#projects" className="theme-btn-primary rounded-full px-5 py-2.5 font-semibold">
                 View Projects
               </a>
-              <a href="/skills/Resume_Risanth.pdf" download="Resume_Risanth.pdf" className="theme-btn-outline rounded-full border px-5 py-2.5 font-semibold">
-                Download Resume
+              <a href="/skills/Resume_Risanth.pdf" target="_blank" rel="noreferrer" className="theme-btn-outline rounded-full border px-5 py-2.5 font-semibold">
+                View Resume
               </a>
               <a href="#contact" className="theme-btn-outline rounded-full border px-5 py-2.5 font-semibold">
                 Contact
@@ -523,20 +620,22 @@ function App() {
 
           <div className="theme-panel relative flex min-h-[460px] flex-col items-center justify-center overflow-hidden rounded-3xl border p-6 sm:min-h-[500px]">
             <div className="theme-glow absolute -right-10 -top-10 h-44 w-44 rounded-full blur-3xl" />
-            <div className="h-56 w-56 overflow-hidden rounded-full border-2 border-amber-300/60 bg-gradient-to-br from-slate-700 to-slate-900 shadow-[0_0_40px_rgba(88,166,255,0.35)] sm:h-64 sm:w-64">
-              <img src={profileImage} alt="Risanth profile" className="h-full w-full object-cover" />
+            <div className="profile-avatar-ring h-56 w-56 sm:h-64 sm:w-64">
+              <div className="profile-avatar-wrap h-full w-full overflow-hidden rounded-full border-2 border-amber-300/60 bg-gradient-to-br from-slate-700 to-slate-900">
+                <img src={profileImage} alt="Risanth profile" className="h-full w-full object-cover" />
+              </div>
             </div>
             <div className="mt-6 w-full space-y-4 text-center sm:mt-8">
               <p className="font-[Space_Grotesk] text-lg font-semibold sm:text-xl">Risanth | Full-Stack Developer</p>
               <div className="flex flex-wrap justify-center gap-2">
                 <span className="theme-chip whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold tracking-[0.08em] sm:text-xs">
-                  35% ORGANIC TRAFFIC GROWTH (SEO + ANALYTICS)
+                  35% HIGHER TRANSACTION SUCCESS (STRIPE + AWS)
                 </span>
                 <span className="theme-chip whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold tracking-[0.08em] sm:text-xs">
-                  30% FEWER FOLLOW-UPS (BOOKING AUTOMATION)
+                  FULL-STACK PLATFORM DELIVERY (REACT/NODE/EXPRESS)
                 </span>
                 <span className="theme-chip whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold tracking-[0.08em] sm:text-xs">
-                  WORDPRESS MIGRATIONS + RESPONSIVE REDESIGNS
+                  WORKFLOW + AI BUILDS (ROTATEOPS/NOVAPREP/FORGEFIT)
                 </span>
               </div>
               <div className="flex flex-wrap justify-center gap-2">
@@ -544,24 +643,32 @@ function App() {
                 <span className="theme-chip rounded-full border px-3 py-1 text-xs">Toronto, ON</span>
                 <span className="theme-chip rounded-full border px-3 py-1 text-xs">Available 2026</span>
               </div>
-              <p className="theme-muted mx-auto max-w-[28ch] text-sm leading-6">
-                Focused on scalable web apps, backend systems, and practical AI solutions.
+              <p className="theme-muted mx-auto max-w-[42ch] text-sm leading-6">
+                Focused on scalable full-stack systems, API performance, and practical AI-powered products.
               </p>
             </div>
           </div>
-        </section>        <SkillsGlobe theme={theme} />
+        </section>
+
+        <a href="#about" className="scroll-explore scroll-explore-float group mx-auto mt-4 mb-8 flex w-fit flex-col items-center gap-1.5">
+          <span className="theme-muted text-sm font-semibold uppercase tracking-[0.24em]">Scroll To Explore</span>
+          <span className="text-2xl text-slate-200 transition-colors group-hover:text-amber-300" aria-hidden="true">
+            ↓
+          </span>
+        </a>
 
         <section id="about" className="pt-20">
           <p className="theme-eyebrow text-center text-xs font-semibold uppercase tracking-[0.22em]">About</p>
           <h2 className="mx-auto mt-4 max-w-5xl pb-4 text-center font-[Space_Grotesk] text-4xl font-bold leading-[1.22] tracking-tight sm:text-5xl md:text-[3.6rem]">
             Software Engineering Co-op student
             <span className="block pt-1 pb-2 bg-gradient-to-r from-amber-300 via-amber-200 to-blue-300 bg-clip-text text-transparent">
-              delivering measurable web impact
+              building scalable full-stack products
             </span>
           </h2>
 
           <p className="theme-muted mx-auto mt-5 max-w-3xl text-center text-base leading-8 md:text-lg">
-            Ontario Tech Software Engineering Co-op student building scalable, user-focused web products.
+            Ontario Tech BEng (Software Engineering Co-op) student with hands-on full-stack experience across React,
+            Next.js, Node.js, Express, and PostgreSQL.
           </p>
 
           <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -578,10 +685,10 @@ function App() {
             <article className="theme-panel rounded-3xl border p-6">
               <p className="text-xl">💼</p>
               <h3 className="mt-4 font-[Space_Grotesk] text-2xl font-semibold">Experience</h3>
-              <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Full-Stack + Operations</p>
+              <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Full-Stack Development</p>
               <p className="theme-muted mt-4 text-sm leading-7">
-                Built full-stack products at ConnectToTalent and TandemTeach using React, Next.js, Node.js, and
-                PostgreSQL. Also work at Walmart, supporting fast-paced operations and safety standards.
+                Built production web platforms at SGMC Canada, Solora Tech, and LEX Marketing using React, Next.js,
+                Node.js, Express, PostgreSQL, and AWS.
               </p>
             </article>
 
@@ -590,19 +697,34 @@ function App() {
               <h3 className="mt-4 font-[Space_Grotesk] text-2xl font-semibold">Projects</h3>
               <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Recent Full-Stack Projects</p>
               <p className="theme-muted mt-4 text-sm leading-7">
-                Built RotateOps for workflow automation, a Leave-Of-Absence Dashboard with Flask + PostgreSQL, and
-                Solora Tech with React/Next.js/Tailwind for scalable, high-performance web experiences.
+                Built RotateOps, NovaPrep, and ForgeFit with React/Node.js, Supabase, Express, and OpenAI APIs to
+                improve workflow automation, adaptive learning, and personalized fitness insights.
               </p>
             </article>
           </div>
         </section>
 
+        <SkillsGlobe theme={theme} />
+
         <section id="projects" className="pt-20">
           <div className="flex items-end justify-between gap-3">
-            <h2 className="font-[Space_Grotesk] text-3xl font-bold md:text-4xl">
-              <span className="text-current">Selected </span>
-              <span className="skills-title-accent">Projects</span>
-            </h2>
+            <div>
+              <h2 className="font-[Space_Grotesk] text-3xl font-bold md:text-4xl">
+                <span className="text-current">Selected </span>
+                <span className="skills-title-accent">Projects</span>
+              </h2>
+              <p className="mt-2 font-mono text-sm">
+                <span className="text-emerald-300">risanth14</span>
+                <span className="theme-muted">@github</span>
+                <span className="text-slate-200">:~ </span>
+                <span className="text-amber-300">$</span>
+                <span className="text-slate-100"> ls -la ~/projects</span>
+                <span
+                  className="ml-1 inline-block h-2.5 w-2.5 animate-pulse rounded-full align-[-2px] bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.95)]"
+                  aria-hidden="true"
+                />
+              </p>
+            </div>
             <a href="https://github.com/risanth14?tab=repositories" target="_blank" rel="noreferrer" className="theme-link text-sm font-semibold">
               View all {GITHUB_USER} repositories
             </a>
@@ -717,34 +839,159 @@ function App() {
                 ))}
             </div>
           </div>
-        </section>
-
-        <section id="experience" className="pt-20">
-          <h2 className="font-[Space_Grotesk] text-3xl font-bold md:text-4xl">Experience & Education</h2>
-          <div className="mt-6 space-y-4">
-            {timeline.map((item) => (
-              <article key={item.heading} className="theme-panel rounded-2xl border p-5">
-                <h3 className="font-[Space_Grotesk] text-lg font-semibold">{item.heading}</h3>
-                <p className="theme-muted mt-2 text-sm leading-6">{item.text}</p>
-              </article>
-            ))}
+        </section>        <section id="experience" className="pt-20">
+          <h2 className="font-[Space_Grotesk] text-3xl font-bold md:text-4xl">
+            <span className="text-current">Work </span>
+            <span className="skills-title-accent">Experience</span>
+          </h2>
+          <div className="relative mt-6 space-y-4 md:space-y-7">
+            <div
+              className="absolute bottom-0 left-1/2 top-0 hidden w-px -translate-x-1/2 bg-white/65 shadow-[0_0_14px_rgba(255,255,255,0.45)] md:block"
+              aria-hidden="true"
+            />
+            {experienceTimeline.map((item, index) => {
+              const isLeft = index % 2 === 0
+              return (
+                <div key={item.id} className="relative md:grid md:grid-cols-2 md:gap-10">
+                  <span
+                    className="absolute left-1/2 top-8 hidden h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-white bg-[#041335] shadow-[0_0_10px_rgba(147,197,253,0.8)] md:block"
+                    aria-hidden="true"
+                  />
+                  <div className={isLeft ? 'md:col-start-1' : 'hidden md:block'} />
+                  <article className={`theme-panel rounded-2xl border p-5 ${isLeft ? 'md:col-start-1' : 'md:col-start-2'}`}>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-300">{item.id}</p>
+                      <p className="theme-muted text-sm font-semibold">{item.period}</p>
+                    </div>
+                    <h3 className="mt-3 font-[Space_Grotesk] text-2xl font-semibold">{item.company}</h3>
+                    <p className="theme-muted mt-1 text-sm font-semibold">{item.location}</p>
+                    <ul className="theme-muted mt-4 list-disc space-y-2 pl-5 text-sm leading-7 marker:text-slate-300">
+                      {item.bullets.map((point) => (
+                        <li key={point}>{point}</li>
+                      ))}
+                    </ul>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {item.tags.map((tag) => (
+                        <span key={tag} className="theme-chip rounded-full border px-3 py-1 text-xs">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </article>
+                </div>
+              )
+            })}
           </div>
         </section>
 
         <section id="contact" className="pt-20">
-          <div className="theme-panel rounded-3xl border p-6 md:p-8">
-            <h2 className="font-[Space_Grotesk] text-3xl font-bold md:text-4xl">Let&apos;s work together.</h2>
-            <p className="theme-muted mt-3 max-w-2xl">
-              If you are hiring, collaborating, or building something ambitious, I would love to connect.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a href="mailto:youremail@example.com" className="theme-btn-primary rounded-full px-5 py-2.5 font-semibold">
-                Email Me
+          <h2 className="font-[Space_Grotesk] text-5xl font-bold leading-tight tracking-tight md:text-7xl">
+            <span className="text-current">Let&apos;s work </span>
+            <span className="skills-title-accent">together</span>
+          </h2>
+          <p className="theme-muted mt-5 max-w-3xl text-lg leading-9">
+            Seeking Software Engineering co-op opportunities for upcoming terms. Based in Toronto and open to remote,
+            hybrid, or relocation roles.
+          </p>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            <article className="theme-panel rounded-3xl border p-7">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-blue-500/35 bg-blue-500/10 text-blue-300">
+                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
+                  <path d="M6.94 8.5H3.56V20h3.38V8.5Zm-1.69-1.54a1.96 1.96 0 1 0 0-3.92 1.96 1.96 0 0 0 0 3.92ZM20.44 20v-6.16c0-3.3-1.76-4.84-4.1-4.84-1.89 0-2.74 1.04-3.22 1.77V8.5H9.75c.04 1.5 0 11.5 0 11.5h3.37v-6.42c0-.34.02-.67.13-.91.27-.67.89-1.36 1.94-1.36 1.37 0 1.92 1.04 1.92 2.56V20h3.33Z" />
+                </svg>
+              </div>
+              <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-300">LinkedIn</p>
+              <p className="mt-3 font-[Space_Grotesk] text-[1.55rem] font-bold leading-none">risanth-sivarajah</p>
+              <a
+                href="https://www.linkedin.com/in/risanth-sivarajah/"
+                target="_blank"
+                rel="noreferrer"
+                className="theme-btn-outline mt-6 inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em]"
+              >
+                Connect With Me
+                <span aria-hidden="true">↗</span>
               </a>
-              <a href="https://github.com/risanth14" target="_blank" rel="noreferrer" className="theme-btn-outline rounded-full border px-5 py-2.5 font-semibold">
-                GitHub
+            </article>
+
+            <article className="theme-panel rounded-3xl border p-7">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-400/30 bg-slate-400/10 text-slate-300">
+                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
+                  <path d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.04c-3.34.73-4.04-1.41-4.04-1.41-.55-1.39-1.34-1.76-1.34-1.76-1.1-.75.09-.73.09-.73 1.2.09 1.84 1.24 1.84 1.24 1.08 1.84 2.83 1.31 3.51 1 .1-.78.42-1.31.76-1.61-2.66-.31-5.46-1.33-5.46-5.92 0-1.31.47-2.39 1.24-3.23-.12-.3-.54-1.55.12-3.22 0 0 1.01-.32 3.3 1.23a11.4 11.4 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.66 1.67.24 2.92.12 3.22.77.84 1.24 1.92 1.24 3.23 0 4.6-2.8 5.61-5.47 5.91.43.37.81 1.1.81 2.22v3.29c0 .32.21.69.82.58A12 12 0 0 0 12 .5Z" />
+                </svg>
+              </div>
+              <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-300">GitHub</p>
+              <p className="mt-3 font-[Space_Grotesk] text-[1.55rem] font-bold leading-none">risanth14</p>
+              <a
+                href="https://github.com/risanth14"
+                target="_blank"
+                rel="noreferrer"
+                className="theme-btn-outline mt-6 inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em]"
+              >
+                View Repos
+                <span aria-hidden="true">↗</span>
               </a>
-            </div>
+            </article>
+
+            <article className="theme-panel rounded-3xl border p-7">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-400/10 text-emerald-300">
+                <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
+                  <path d="M6.62 10.79a15.54 15.54 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1-.24 11.3 11.3 0 0 0 3.54.56 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.3 11.3 0 0 0 .56 3.54 1 1 0 0 1-.24 1l-2.2 2.25Z" />
+                </svg>
+              </div>
+              <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-300">Phone</p>
+              <p className="mt-3 font-[Space_Grotesk] text-[1.55rem] font-bold leading-none">647-781-8615</p>
+              <a href="tel:+16477818615" className="theme-btn-outline mt-6 inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em]">
+                Call Me
+                <span aria-hidden="true">↗</span>
+              </a>
+            </article>
+          </div>
+
+          <div className="theme-panel mt-6 rounded-3xl border p-6 md:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">Send Direct Email</p>
+            <p className="theme-muted mt-3">Use this form to send me a message at risanth14@gmail.com.</p>
+            <form className="mt-6 space-y-4" onSubmit={onSubmitContactForm}>
+              <div className="grid gap-3 md:grid-cols-2">
+                <input
+                  type="text"
+                  name="name"
+                  value={contactName}
+                  onChange={(event) => setContactName(event.target.value)}
+                  placeholder="Your name"
+                  className="theme-input rounded-2xl border px-4 py-3 text-sm outline-none"
+                />
+                <input
+                  type="email"
+                  name="email"
+                  value={contactEmail}
+                  onChange={(event) => setContactEmail(event.target.value)}
+                  placeholder="Your email"
+                  className="theme-input rounded-2xl border px-4 py-3 text-sm outline-none"
+                />
+              </div>
+              <textarea
+                name="message"
+                value={contactMessage}
+                onChange={(event) => setContactMessage(event.target.value)}
+                placeholder="Your message"
+                rows={6}
+                className="theme-input w-full rounded-2xl border px-4 py-3 text-sm outline-none"
+              />
+              <div className="flex flex-wrap items-center gap-3">
+                <button type="submit" disabled={contactStatus === 'sending'} className="theme-btn-primary rounded-full px-6 py-2.5 font-semibold disabled:opacity-60">
+                  {contactStatus === 'sending' ? 'Sending...' : 'Send Message'}
+                </button>
+                {contactStatusText && (
+                  <p className={`text-sm ${contactStatus === 'success' ? 'text-emerald-300' : contactStatus === 'error' ? 'text-rose-300' : 'text-cyan-200'}`}>
+                    {contactStatusText}
+                  </p>
+                )}
+              </div>
+            </form>
+          </div>
+          <div className="theme-muted mt-5 text-sm">
+            Available for 2026 opportunities - Toronto, ON - Open to remote and relocation.
           </div>
         </section>
       </main>
@@ -809,66 +1056,76 @@ function App() {
       <button
         type="button"
         onClick={() => setChatOpen((open) => !open)}
-        className="theme-btn-primary fixed bottom-5 right-5 z-50 rounded-full px-5 py-2.5 text-sm font-bold shadow-[0_14px_35px_rgba(0,0,0,0.4)]"
+        aria-label={chatOpen ? 'Close AI Chat' : 'Open AI Chat'}
+        className="chat-fab theme-btn-primary fixed bottom-5 right-5 z-50 inline-flex h-14 w-14 items-center justify-center rounded-full shadow-[0_14px_35px_rgba(0,0,0,0.4)]"
       >
-        AI Chat
+        <span className="chat-fab-ring" aria-hidden="true" />
+        <svg viewBox="0 0 24 24" className="h-6 w-6 text-white" aria-hidden="true">
+          <path
+            d="M20 4H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3v3l3.8-3H20a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 12H10l-1.5 1.2L7 18v-2H4V6h16v10Z"
+            fill="currentColor"
+          />
+        </svg>
       </button>
 
       {chatOpen && (
-        <section className="theme-panel fixed bottom-20 right-4 z-50 w-[min(380px,calc(100%-1.5rem))] overflow-hidden rounded-2xl border shadow-[0_30px_70px_rgba(0,0,0,0.45)]">
-          <div className="theme-border flex items-center justify-between border-b px-4 py-3">
+        <section className="theme-panel fixed bottom-20 right-4 z-50 flex h-[min(620px,calc(100vh-7rem))] w-[min(460px,calc(100%-1rem))] flex-col overflow-hidden rounded-2xl border shadow-[0_30px_70px_rgba(0,0,0,0.45)]">
+          <div className="theme-border flex items-center justify-between border-b px-5 py-3.5">
             <strong className="font-[Space_Grotesk] text-sm">Portfolio AI Assistant</strong>
             <button type="button" onClick={() => setChatOpen(false)} className="theme-btn-outline rounded-full border px-2.5 py-1 text-xs">
               Close
             </button>
           </div>
 
-          <div className="max-h-80 space-y-2 overflow-y-auto p-3">
+          <div className="project-scroll min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
             {chatMessages.map((message) => (
               <div
                 key={message.id}
-                className={`rounded-xl px-3 py-2 text-sm leading-6 ${
-                  message.role === 'user' ? 'theme-chat-user ml-10 text-right' : 'theme-chat-bot mr-10'
+                className={`w-fit max-w-[72%] rounded-lg px-2.5 py-1.5 text-[14px] leading-6 ${
+                  message.role === 'user' ? 'theme-chat-user ml-auto text-right' : 'theme-chat-bot mr-auto'
                 }`}
               >
                 {message.content}
               </div>
             ))}
-            {chatBusy && <div className="theme-chat-bot mr-10 rounded-xl px-3 py-2 text-sm">Thinking...</div>}
+            {chatBusy && <div className="theme-chat-bot mr-auto w-fit max-w-[72%] rounded-lg px-2.5 py-1.5 text-[14px] leading-6">Thinking...</div>}
           </div>
 
-          <form onSubmit={onSendMessage} className="theme-border grid grid-cols-[1fr_auto] gap-2 border-t p-3">
+          <form onSubmit={onSendMessage} className="theme-border grid grid-cols-[1fr_auto] gap-2 border-t p-3.5">
             <input
               value={chatInput}
               onChange={(event) => setChatInput(event.target.value)}
               placeholder="Ask about skills, projects, or experience..."
-              className="theme-input rounded-xl border px-3 py-2 text-sm outline-none"
+              className="theme-input rounded-xl border px-3 py-2.5 text-[15px] leading-6 outline-none"
             />
             <button type="submit" disabled={chatBusy} className="theme-btn-primary rounded-xl px-3 py-2 text-xs font-semibold disabled:opacity-60">
               Send
             </button>
           </form>
 
-          <details className="theme-border border-t px-3 py-2">
-            <summary className="theme-muted cursor-pointer text-xs">Set OpenAI API key (optional)</summary>
-            <div className="mt-2 flex gap-2">
-              <input
-                value={apiKeyInput}
-                onChange={(event) => setApiKeyInput(event.target.value)}
-                type="password"
-                placeholder="sk-..."
-                className="theme-input w-full rounded-xl border px-3 py-2 text-xs outline-none"
-              />
-              <button type="button" onClick={saveApiKey} className="theme-btn-outline rounded-xl border px-3 py-2 text-xs font-semibold">
-                Save
-              </button>
-            </div>
-          </details>
         </section>
       )}
 
-      <footer className="theme-border border-t py-6 text-center text-sm">
-        <p className="theme-muted">Copyright {currentYear} Risanth. Built with React, TypeScript, Tailwind CSS, and intention.</p>
+      <footer className="theme-border border-t py-6">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center justify-center gap-x-6 gap-y-3 px-4 text-xs font-semibold uppercase tracking-[0.16em] md:px-8 xl:px-12">
+          <span className="text-amber-300">RS</span>
+          <span className="theme-muted">•</span>
+          <span className="theme-muted">© {currentYear} Risanth Sivarajah</span>
+          <a href="https://github.com/risanth14" target="_blank" rel="noreferrer" className="theme-muted hover:text-slate-100 transition-colors">
+            GitHub
+          </a>
+          <a href="https://www.linkedin.com/in/risanth-sivarajah/" target="_blank" rel="noreferrer" className="theme-muted hover:text-slate-100 transition-colors">
+            LinkedIn
+          </a>
+          <a href="mailto:risanth14@gmail.com" className="theme-muted hover:text-slate-100 transition-colors">
+            Email
+          </a>
+          <span className="theme-muted">•</span>
+          <span className="theme-muted">Risanth Sivarajah</span>
+          <a href="#top" className="theme-muted hover:text-slate-100 transition-colors">
+            Back To Top ↑
+          </a>
+        </div>
       </footer>
     </div>
   )
@@ -882,3 +1139,4 @@ export default App
 
 
 // Testing commit for Vercel integration.
+

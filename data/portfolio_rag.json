@@ -1,0 +1,92 @@
+{
+  "profile": {
+    "name": "Risanth Sivarajah",
+    "headline": "Software Engineering Co-op student and full-stack developer",
+    "location": "Toronto, ON",
+    "email": "risanth14@gmail.com",
+    "phone": "647-781-8615",
+    "linkedin": "https://www.linkedin.com/in/risanth-sivarajah/",
+    "github": "https://github.com/risanth14",
+    "availability": "Seeking Software Engineering co-op opportunities for upcoming terms. Open to remote, hybrid, or relocation."
+  },
+  "chunks": [
+    {
+      "id": "education-ontario-tech",
+      "category": "education",
+      "title": "Ontario Tech University",
+      "tags": ["education", "university", "ontario tech", "software engineering", "co-op"],
+      "text": "Bachelor of Engineering (BEng), Software Engineering Co-op (Honours), Ontario Tech University, Sep 2023 to Apr 2027, Oshawa ON. Coursework includes Algorithms, Data Structures, Databases, Object-Oriented Programming, Artificial Intelligence, Software Architecture, Computer Networks, and Systems Programming."
+    },
+    {
+      "id": "experience-sgmc",
+      "category": "experience",
+      "title": "SGMC Canada - Full-Stack Developer",
+      "tags": ["sgmc", "react", "next.js", "node.js", "postgresql", "aws", "stripe"],
+      "text": "At SGMC Canada (Jan 2026 to Apr 2026, Toronto ON), engineered a full-stack recruitment platform using Next.js, React, Node.js, and PostgreSQL for onboarding flows, role-based access, and dashboards. Integrated Stripe payments and deployed services on AWS EC2 and S3, increasing transaction success rates by 35%. Optimized backend APIs and database queries to improve performance and scalability across workflows."
+    },
+    {
+      "id": "experience-solora",
+      "category": "experience",
+      "title": "Solora Tech - Full-Stack Developer",
+      "tags": ["solora", "react", "node.js", "express", "rest api"],
+      "text": "At Solora Tech (Sep 2025 to Dec 2025, Toronto ON), developed and deployed a scalable full-stack platform using React, Node.js, and Express with a responsive production UI. Designed and optimized REST APIs and backend data flows to reduce load times and improve responsiveness. Collaborated across frontend and backend integration to deliver reliable end-to-end features."
+    },
+    {
+      "id": "experience-lex",
+      "category": "experience",
+      "title": "LEX Marketing Inc. - Web Developer",
+      "tags": ["lex marketing", "wordpress", "seo", "ui/ux", "responsive design"],
+      "text": "At LEX Marketing Inc. (May 2025 to Aug 2025, Toronto ON), redesigned existing websites with modern UI/UX principles to improve usability and engagement. Migrated websites from Weebly to WordPress to streamline content workflows. Improved mobile responsiveness and SEO, increasing accessibility and performance across devices."
+    },
+    {
+      "id": "experience-brazily",
+      "category": "experience",
+      "title": "Brazily Fitness Inc. - Web Developer",
+      "tags": ["brazily fitness", "frontend", "seo", "web design"],
+      "text": "At Brazily Fitness Inc. (Jan 2025 to Apr 2025, Toronto ON), built and launched a promotional website with service information and booking pathways. Improved content hierarchy and navigation flow, and strengthened technical SEO and maintainability."
+    },
+    {
+      "id": "experience-walmart",
+      "category": "experience",
+      "title": "Walmart - Stock Unloader Associate",
+      "tags": ["walmart", "operations", "inventory", "teamwork"],
+      "text": "At Walmart (Sep 2024 to Present, Whitby ON), supports daily store operations through freight unloading, pallet staging, and cross-department stocking. Maintains inventory accuracy through disciplined labeling and product placement. Works in a fast-paced environment with strong teamwork, time management, and safety-first execution."
+    },
+    {
+      "id": "project-rotateops",
+      "category": "project",
+      "title": "RotateOps",
+      "tags": ["rotateops", "react", "node.js", "supabase", "slack api", "rest api"],
+      "text": "RotateOps is a workflow automation platform built with React, Node.js, and Supabase to manage rotation-based task assignment and reduce manual coordination. Implemented REST APIs and real-time updates for synchronization reliability. Integrated Slack API to automate notifications and improve team visibility."
+    },
+    {
+      "id": "project-novaprep",
+      "category": "project",
+      "title": "NovaPrep",
+      "tags": ["novaprep", "react", "node.js", "express", "aws", "ai"],
+      "text": "NovaPrep is an AI-powered exam platform using React and Node.js to generate dynamic practice content and personalized study support. Built scalable REST APIs and backend services with Express. Integrated AI-driven question generation and feedback systems to improve adaptive learning and retention."
+    },
+    {
+      "id": "project-forgefit",
+      "category": "project",
+      "title": "ForgeFit",
+      "tags": ["forgefit", "react native", "typescript", "supabase", "openai api", "fitness"],
+      "text": "ForgeFit is a cross-platform fitness app built with React Native and TypeScript for workout and nutrition tracking. Implemented authentication, storage, and data logic with Supabase. Added AI-powered nutrition insights with OpenAI API to provide personalized recommendations."
+    },
+    {
+      "id": "skills-summary",
+      "category": "skills",
+      "title": "Technical Skills",
+      "tags": ["skills", "languages", "frameworks", "cloud", "tools"],
+      "text": "Languages: C, C++, C#, Python, Java, JavaScript, SQL. Frameworks and libraries: React, Node.js, Next.js, Express, .NET, FastAPI, Flask, React Native, TypeScript. Cloud and DevOps: AWS, GCP, Azure, Docker, Kubernetes, Terraform, CI/CD. Databases and tools: PostgreSQL, MySQL, Supabase, Firebase, Git, Jira, Postman, Power BI."
+    },
+    {
+      "id": "contact-summary",
+      "category": "contact",
+      "title": "Contact",
+      "tags": ["contact", "email", "linkedin", "github", "phone"],
+      "text": "Contact Risanth at risanth14@gmail.com, 647-781-8615, LinkedIn https://www.linkedin.com/in/risanth-sivarajah/, and GitHub https://github.com/risanth14."
+    }
+  ]
+}
+

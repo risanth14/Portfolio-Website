@@ -1,49 +1,83 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 
 type ThemeMode = 'dark' | 'light'
+type SkillCategory = 'frontend' | 'backend' | 'infra' | 'ai_data'
 
 type SkillDef = {
   name: string
   color: string
   logo: string
+  category: SkillCategory
+}
+
+const CATEGORY_CONFIG: Record<
+  SkillCategory,
+  { label: string; accentHex: string; accentTextClass: string }
+> = {
+  frontend: {
+    label: 'Frontend',
+    accentHex: '#3b82f6',
+    accentTextClass: 'text-blue-300',
+  },
+  backend: {
+    label: 'Backend',
+    accentHex: '#f59e0b',
+    accentTextClass: 'text-amber-300',
+  },
+  infra: {
+    label: 'Infra & Cloud',
+    accentHex: '#10b981',
+    accentTextClass: 'text-emerald-300',
+  },
+  ai_data: {
+    label: 'AI & Data',
+    accentHex: '#a855f7',
+    accentTextClass: 'text-violet-300',
+  },
 }
 
 const SKILLS: SkillDef[] = [
-  { name: 'Python', color: '#3776ab', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg' },
-  { name: 'React', color: '#61dafb', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg' },
-  { name: 'TypeScript', color: '#3178c6', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg' },
-  { name: 'Next.js', color: '#f8fafc', logo: 'https://cdn.simpleicons.org/nextdotjs/ffffff' },
-  { name: 'Node.js', color: '#68a063', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg' },
-  { name: 'JavaScript', color: '#f7df1e', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg' },
-  { name: 'Flask', color: '#f8fafc', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flask/flask-original.svg' },
-  { name: '.NET', color: '#6b4ce6', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/dot-net/dot-net-original.svg' },
-  { name: 'GraphQL', color: '#e10098', logo: 'https://cdn.simpleicons.org/graphql/e10098' },
-  { name: 'Docker', color: '#2496ed', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg' },
-  { name: 'Kubernetes', color: '#326CE5', logo: 'https://cdn.simpleicons.org/kubernetes/326CE5' },
-  { name: 'Terraform', color: '#844fba', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/terraform/terraform-original.svg' },
-  { name: 'Jenkins', color: '#d33833', logo: 'https://cdn.simpleicons.org/jenkins/d33833' },
-  { name: 'GitHub Actions', color: '#2088ff', logo: 'https://cdn.simpleicons.org/githubactions/2088ff' },
-  { name: 'Azure', color: '#0078d4', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/azure/azure-original.svg' },
-  { name: 'GCP', color: '#4285f4', logo: 'https://cdn.simpleicons.org/googlecloud/4285f4' },
-  { name: 'FastAPI', color: '#009688', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/fastapi/fastapi-original.svg' },
-  { name: 'PostgreSQL', color: '#336791', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg' },
-  { name: 'MySQL', color: '#00758f', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg' },
-  { name: 'Oracle DB', color: '#f80000', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/oracle/oracle-original.svg' },
-  { name: 'Java', color: '#ED8B00', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg' },
-  { name: 'C#', color: '#7b4be2', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/csharp/csharp-original.svg' },
-  { name: 'C++', color: '#00599c', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-original.svg' },
-  { name: 'Chart.js', color: '#ff6384', logo: 'https://cdn.simpleicons.org/chartdotjs/ff6384' },
-  { name: 'Postman', color: '#ff6c37', logo: 'https://cdn.simpleicons.org/postman/ff6c37' },
-  { name: 'Git', color: '#f1502f', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg' },
-  { name: 'GitHub', color: '#f8fafc', logo: 'https://cdn.simpleicons.org/github/ffffff' },
+  { name: 'React', color: '#61dafb', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg', category: 'frontend' },
+  { name: 'TypeScript', color: '#3178c6', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg', category: 'frontend' },
+  { name: 'Next.js', color: '#f8fafc', logo: 'https://cdn.simpleicons.org/nextdotjs/ffffff', category: 'frontend' },
+  { name: 'JavaScript', color: '#f7df1e', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg', category: 'frontend' },
+
+  { name: 'Node.js', color: '#68a063', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg', category: 'backend' },
+  { name: 'FastAPI', color: '#009688', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/fastapi/fastapi-original.svg', category: 'backend' },
+  { name: 'Flask', color: '#f8fafc', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flask/flask-original.svg', category: 'backend' },
+  { name: '.NET', color: '#6b4ce6', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/dot-net/dot-net-original.svg', category: 'backend' },
+  { name: 'GraphQL', color: '#e10098', logo: 'https://cdn.simpleicons.org/graphql/e10098', category: 'backend' },
+  { name: 'PostgreSQL', color: '#336791', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg', category: 'backend' },
+  { name: 'MySQL', color: '#00758f', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg', category: 'backend' },
+  { name: 'Oracle DB', color: '#f80000', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/oracle/oracle-original.svg', category: 'backend' },
+
+  { name: 'Docker', color: '#2496ed', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg', category: 'infra' },
+  { name: 'Kubernetes', color: '#326CE5', logo: 'https://cdn.simpleicons.org/kubernetes/326CE5', category: 'infra' },
+  { name: 'Terraform', color: '#844fba', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/terraform/terraform-original.svg', category: 'infra' },
+  { name: 'Jenkins', color: '#d33833', logo: 'https://cdn.simpleicons.org/jenkins/d33833', category: 'infra' },
+  { name: 'GitHub Actions', color: '#2088ff', logo: 'https://cdn.simpleicons.org/githubactions/2088ff', category: 'infra' },
+  { name: 'Azure', color: '#0078d4', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/azure/azure-original.svg', category: 'infra' },
+  { name: 'GCP', color: '#4285f4', logo: 'https://cdn.simpleicons.org/googlecloud/4285f4', category: 'infra' },
+
+  { name: 'Python', color: '#3776ab', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg', category: 'ai_data' },
+  { name: 'Chart.js', color: '#ff6384', logo: 'https://cdn.simpleicons.org/chartdotjs/ff6384', category: 'ai_data' },
+  { name: 'Java', color: '#ED8B00', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg', category: 'ai_data' },
+  { name: 'C#', color: '#7b4be2', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/csharp/csharp-original.svg', category: 'ai_data' },
+  { name: 'C++', color: '#00599c', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-original.svg', category: 'ai_data' },
+  { name: 'Postman', color: '#ff6c37', logo: 'https://cdn.simpleicons.org/postman/ff6c37', category: 'ai_data' },
+  { name: 'Git', color: '#f1502f', logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg', category: 'ai_data' },
+  { name: 'GitHub', color: '#f8fafc', logo: 'https://cdn.simpleicons.org/github/ffffff', category: 'ai_data' },
 ]
 
 const GLOBE_HEIGHT = 520
 
 export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const filterBarRef = useRef<HTMLDivElement>(null)
+  const globeWrapRef = useRef<HTMLDivElement>(null)
   const hoveredRef = useRef<string | null>(null)
+  const [activeCategory, setActiveCategory] = useState<SkillCategory | null>(null)
   const [hovered, setHovered] = useState<{
     name: string
     x: number
@@ -51,12 +85,34 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
     color: string
   } | null>(null)
 
+  const visibleSkills = useMemo(
+    () => (activeCategory ? SKILLS.filter((skill) => skill.category === activeCategory) : SKILLS),
+    [activeCategory],
+  )
+
+  useEffect(() => {
+    if (!activeCategory) return
+
+    const onWindowPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null
+      if (!target) return
+      if (filterBarRef.current?.contains(target)) return
+      if (globeWrapRef.current?.contains(target)) return
+      setActiveCategory(null)
+    }
+
+    window.addEventListener('pointerdown', onWindowPointerDown)
+    return () => window.removeEventListener('pointerdown', onWindowPointerDown)
+  }, [activeCategory])
+
   useEffect(() => {
     const container = containerRef.current
-    if (!container) return
+    if (!container || visibleSkills.length === 0) return
 
     const width = container.clientWidth
     const height = GLOBE_HEIGHT
+    const accent = activeCategory ? CATEGORY_CONFIG[activeCategory].accentHex : '#3b82f6'
+    const accentColor = new THREE.Color(accent)
 
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
@@ -72,22 +128,21 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
     scene.add(globe)
 
     const RADIUS = 5
-
     const sphereGeo = new THREE.IcosahedronGeometry(RADIUS, 2)
     const sphereMat = new THREE.MeshBasicMaterial({
-      color: 0xa78bfa,
+      color: accentColor,
       wireframe: true,
       transparent: true,
-      opacity: 0.07,
+      opacity: theme === 'light' ? 0.16 : 0.1,
     })
     const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat)
     globe.add(sphereMesh)
 
     const ringMats: THREE.MeshBasicMaterial[] = []
-    const makeRing = (rx: number, ry: number, rz: number, op: number, col: number) => {
+    const makeRing = (rx: number, ry: number, rz: number, op: number) => {
       const geo = new THREE.RingGeometry(RADIUS + 0.02, RADIUS + 0.07, 128)
       const mat = new THREE.MeshBasicMaterial({
-        color: col,
+        color: accentColor,
         transparent: true,
         opacity: op,
         side: THREE.DoubleSide,
@@ -97,16 +152,16 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
       globe.add(ring)
       ringMats.push(mat)
     }
-    makeRing(Math.PI / 2, 0, 0, 0.1, 0xa78bfa)
-    makeRing(Math.PI / 3, 0, Math.PI / 6, 0.06, 0xec4899)
-    makeRing(Math.PI / 2.5, Math.PI / 4, 0, 0.05, 0x60a5fa)
+    makeRing(Math.PI / 2, 0, 0, theme === 'light' ? 0.18 : 0.14)
+    makeRing(Math.PI / 3, 0, Math.PI / 6, theme === 'light' ? 0.13 : 0.1)
+    makeRing(Math.PI / 2.5, Math.PI / 4, 0, theme === 'light' ? 0.11 : 0.08)
 
     const glowGeo = new THREE.SphereGeometry(0.4, 16, 16)
     const iconSprites: THREE.Sprite[] = []
     const loader = new THREE.TextureLoader()
 
-    SKILLS.forEach((skill, i) => {
-      const phi = Math.acos(1 - (2 * (i + 0.5)) / SKILLS.length)
+    visibleSkills.forEach((skill, i) => {
+      const phi = Math.acos(1 - (2 * (i + 0.5)) / visibleSkills.length)
       const theta = Math.PI * (1 + Math.sqrt(5)) * i
 
       const x = RADIUS * Math.sin(phi) * Math.cos(theta)
@@ -116,7 +171,7 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
       const spriteMat = new THREE.SpriteMaterial({
         color: 0xffffff,
         transparent: true,
-        opacity: 0.9,
+        opacity: 0.95,
         depthWrite: false,
       })
       const sprite = new THREE.Sprite(spriteMat)
@@ -142,7 +197,7 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
         undefined,
         () => {
           spriteMat.color = new THREE.Color(skill.color)
-          spriteMat.opacity = 0.85
+          spriteMat.opacity = 0.9
         },
       )
 
@@ -162,7 +217,6 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
 
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2(-999, -999)
-
     let isDragging = false
     let prevMouse = { x: 0, y: 0 }
     let autoSpeed = 0.003
@@ -240,37 +294,12 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
       globe.rotation.x += velocity.x
       globe.rotation.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, globe.rotation.x))
 
-      if (theme === 'light') {
-        sphereMat.color.set(0x1e3a8a)
-        sphereMat.opacity = 0.15
-        if (ringMats[0]) {
-          ringMats[0].color.set(0x1e3a8a)
-          ringMats[0].opacity = 0.14
-        }
-        if (ringMats[1]) {
-          ringMats[1].color.set(0x334155)
-          ringMats[1].opacity = 0.09
-        }
-        if (ringMats[2]) {
-          ringMats[2].color.set(0x1e40af)
-          ringMats[2].opacity = 0.1
-        }
-      } else {
-        sphereMat.color.set(0xa78bfa)
-        sphereMat.opacity = 0.07
-        if (ringMats[0]) {
-          ringMats[0].color.set(0xa78bfa)
-          ringMats[0].opacity = 0.1
-        }
-        if (ringMats[1]) {
-          ringMats[1].color.set(0xec4899)
-          ringMats[1].opacity = 0.06
-        }
-        if (ringMats[2]) {
-          ringMats[2].color.set(0x60a5fa)
-          ringMats[2].opacity = 0.05
-        }
-      }
+      sphereMat.color.copy(accentColor)
+      sphereMat.opacity = theme === 'light' ? 0.16 : 0.1
+      ringMats.forEach((mat, idx) => {
+        mat.color.copy(accentColor)
+        mat.opacity = (theme === 'light' ? 0.16 : 0.1) - idx * 0.03
+      })
 
       iconSprites.forEach((sprite) => {
         const worldPos = sprite.position.clone().applyMatrix4(globe.matrixWorld)
@@ -278,21 +307,10 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
         const minD = camera.position.z - RADIUS
         const maxD = camera.position.z + RADIUS
         const t = Math.max(0, Math.min(1, 1 - (dist - minD) / (maxD - minD)))
-
         const isHovered = hoveredRef.current === sprite.userData.name
 
-        let scale: number
-        let opacity: number
-        if (t > 0.6) {
-          scale = 0.85 + t * 0.7
-          opacity = 0.92 + t * 0.08
-        } else if (t > 0.3) {
-          scale = 0.5 + t * 0.55
-          opacity = 0.45 + t * 0.28
-        } else {
-          scale = 0.28 + t * 0.38
-          opacity = 0.18 + t * 0.18
-        }
+        let scale = t > 0.6 ? 0.85 + t * 0.7 : t > 0.3 ? 0.5 + t * 0.55 : 0.28 + t * 0.38
+        let opacity = t > 0.6 ? 0.92 + t * 0.08 : t > 0.3 ? 0.45 + t * 0.28 : 0.18 + t * 0.18
 
         if (isHovered) {
           scale = 1.9
@@ -367,28 +385,66 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
       sphereGeo.dispose()
       sphereMat.dispose()
       glowGeo.dispose()
+      hoveredRef.current = null
       if (container.contains(el)) container.removeChild(el)
     }
-  }, [theme])
+  }, [activeCategory, theme, visibleSkills])
 
   return (
     <section id="skills" className="pt-20">
       <div className="mb-6 flex items-end justify-center gap-3 text-center">
-        <p className="theme-eyebrow pb-2 text-xs font-semibold uppercase tracking-[0.22em] md:pb-3">
-          Tech Stack
-        </p>
+        <p className="theme-eyebrow pb-2 text-xs font-semibold uppercase tracking-[0.22em] md:pb-3">Tech Stack</p>
         <h2 className="font-[Space_Grotesk] text-5xl font-bold leading-none md:text-7xl">
           <span className="text-current">My </span>
           <span className="skills-title-accent">Skills</span>
         </h2>
       </div>
 
-      <div className="relative mx-auto max-w-[1060px] px-2 py-4 md:px-5 md:py-6">
-        <div
-          ref={containerRef}
-          className="relative mx-auto"
-          style={{ maxWidth: 860, height: GLOBE_HEIGHT }}
-        >
+      <div ref={filterBarRef} className="mb-4 flex flex-wrap justify-center gap-2">
+        {(Object.keys(CATEGORY_CONFIG) as SkillCategory[]).map((category) => {
+          const item = CATEGORY_CONFIG[category]
+          const active = category === activeCategory
+          return (
+            <button
+              key={category}
+              type="button"
+              onClick={() => setActiveCategory(category)}
+              className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition ${
+                active
+                  ? 'skills-filter-pill-active font-bold'
+                  : 'theme-chip border'
+              }`}
+              style={
+                active
+                  ? {
+                      borderColor: `${item.accentHex}aa`,
+                      background: `${item.accentHex}22`,
+                      boxShadow: `0 0 26px ${item.accentHex}88, inset 0 0 14px ${item.accentHex}33`,
+                      color: item.accentHex,
+                      textShadow: `0 0 14px ${item.accentHex}cc`,
+                      ['--pill-glow' as string]: item.accentHex,
+                    }
+                  : undefined
+              }
+            >
+              <span className="inline-flex items-center gap-2">
+                <span
+                  className="inline-block h-1.5 w-1.5 rounded-full"
+                  style={{
+                    backgroundColor: item.accentHex,
+                    boxShadow: active ? `0 0 10px ${item.accentHex}` : 'none',
+                  }}
+                  aria-hidden="true"
+                />
+                {item.label}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div ref={globeWrapRef} className="relative mx-auto max-w-[1060px] px-2 py-4 md:px-5 md:py-6">
+        <div ref={containerRef} className="relative mx-auto" style={{ maxWidth: 860, height: GLOBE_HEIGHT }}>
           {hovered && (
             <div
               className="pointer-events-none absolute z-50 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide"
@@ -396,9 +452,10 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
                 left: hovered.x,
                 top: hovered.y + 26,
                 transform: 'translateX(-50%)',
-                background: theme === 'light'
-                  ? 'linear-gradient(135deg, rgba(15,23,42,0.94), rgba(30,41,59,0.9))'
-                  : 'linear-gradient(135deg, rgba(2,6,23,0.92), rgba(15,23,42,0.9))',
+                background:
+                  theme === 'light'
+                    ? 'linear-gradient(135deg, rgba(15,23,42,0.94), rgba(30,41,59,0.9))'
+                    : 'linear-gradient(135deg, rgba(2,6,23,0.92), rgba(15,23,42,0.9))',
                 border: `1px solid ${hovered.color}aa`,
                 color: '#f8fafc',
                 textShadow: '0 1px 2px rgba(0,0,0,0.55)',
@@ -410,9 +467,25 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
           )}
         </div>
 
-        <p className="theme-muted text-center text-sm">Drag to rotate . Hover nodes for details</p>
+        {activeCategory && (
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
+            {visibleSkills.map((skill) => (
+              <span key={skill.name} className="theme-chip inline-flex items-center gap-1.5 rounded-xl border px-3 py-1 text-sm font-semibold">
+                <img
+                  src={skill.logo}
+                  alt={`${skill.name} logo`}
+                  loading="lazy"
+                  className="h-3.5 w-3.5 object-contain"
+                />
+                {skill.name}
+              </span>
+            ))}
+          </div>
+        )}
+
       </div>
     </section>
   )
 }
+
 
