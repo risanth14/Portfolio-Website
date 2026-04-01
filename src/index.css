@@ -374,31 +374,54 @@ body {
   border-color: var(--border);
 }
 
-.cursor-orb {
+.project-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent-1) 45%, transparent) color-mix(in srgb, var(--bg-base) 72%, transparent);
+}
+
+.project-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.project-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-base) 72%, transparent);
+}
+
+.project-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-1) 45%, transparent);
+}
+
+.cursor-bubble {
   position: fixed;
   left: 0;
   top: 0;
   z-index: 60;
   height: 40px;
   width: 40px;
-  border-radius: 999px;
+  border-radius: 52% 46% 58% 44% / 56% 50% 48% 54%;
   border: 1px solid color-mix(in srgb, var(--accent-1) 65%, transparent);
   background: color-mix(in srgb, var(--bg-base) 70%, transparent);
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transform-origin: center center;
+  transition: opacity 0.25s ease, border-radius 0.14s linear;
   box-shadow: 0 0 20px color-mix(in srgb, var(--accent-1) 28%, transparent);
 }
 
 .cursor-dot {
-  position: absolute;
-  left: 50%;
-  top: 50%;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 61;
   height: 8px;
   width: 8px;
-  transform: translate(-50%, -50%);
   border-radius: 999px;
   background: var(--accent-1);
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-1) 50%, transparent);
 }
 
 .globe-spin {

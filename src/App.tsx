@@ -9,13 +9,23 @@ type Repo = {
   description: string | null
   html_url: string
   homepage: string | null
+  languages_url: string
   stargazers_count: number
+  forks_count: number
   language: string | null
   updated_at: string
+  pushed_at: string
+  topics?: string[]
   fork: boolean
   owner: {
     login: string
   }
+}
+
+type RepoView = Repo & {
+  isPinned: boolean
+  topLanguages: string[]
+  pinnedIndex?: number
 }
 
 type ChatRole = 'user' | 'bot'
@@ -30,6 +40,16 @@ type ChatMessage = {
 const GITHUB_USER = 'risanth14'
 const OPENAI_KEY_STORAGE = 'portfolio_openai_key'
 const THEME_STORAGE = 'portfolio_theme_mode'
+const PROJECT_REFRESH_MS = 60_000
+
+type GithubReposApiResponse = {
+  repos: Array<Repo & {
+    top_languages?: string[]
+    is_pinned?: boolean
+    pinned_index?: number | null
+  }>
+  total_count?: number
+}
 
 const navItems = [
   { id: 'top', label: 'Home' },
@@ -62,7 +82,7 @@ const fallbackAnswers: Array<{ trigger: string[]; text: string }> = [
   },
   {
     trigger: ['project', 'build', 'portfolio', 'github'],
-    text: 'The projects section pulls repositories from GitHub and highlights the most active work with direct repo/live links.',
+    text: 'Check the Projects section for featured builds, and use the GitHub button for the full repository list.',
   },
   {
     trigger: ['experience', 'education', 'background'],
@@ -71,8 +91,9 @@ const fallbackAnswers: Array<{ trigger: string[]; text: string }> = [
 ]
 
 function App() {
-  const [repos, setRepos] = useState<Repo[]>([])
-  const [featuredRepos, setFeaturedRepos] = useState<Repo[]>([])
+  const [repos, setRepos] = useState<RepoView[]>([])
+  const [featuredRepos, setFeaturedRepos] = useState<RepoView[]>([])
+  const [totalRepoCount, setTotalRepoCount] = useState(0)
   const [loadingProjects, setLoadingProjects] = useState(true)
   const [projectsError, setProjectsError] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
@@ -94,7 +115,9 @@ function App() {
   ])
   const [chatBusy, setChatBusy] = useState(false)
   const [apiKeyInput, setApiKeyInput] = useState('')
-  const cursorRef = useRef<HTMLDivElement | null>(null)
+  const [selectedRepo, setSelectedRepo] = useState<RepoView | null>(null)
+  const cursorBubbleRef = useRef<HTMLDivElement | null>(null)
+  const cursorDotRef = useRef<HTMLDivElement | null>(null)
   const currentYear = useMemo(() => new Date().getFullYear(), [])
 
   const stars = useMemo(
@@ -115,34 +138,63 @@ function App() {
 
   useEffect(() => {
     void fetchProjects()
+    const intervalId = window.setInterval(() => {
+      void fetchProjects()
+    }, PROJECT_REFRESH_MS)
+    return () => window.clearInterval(intervalId)
   }, [])
 
   useEffect(() => {
     if (!window.matchMedia('(pointer: fine)').matches) return
-    const cursor = cursorRef.current
-    if (!cursor) return
+    const bubble = cursorBubbleRef.current
+    const dot = cursorDotRef.current
+    if (!bubble || !dot) return
 
     let rafId = 0
-    let currentX = -100
-    let currentY = -100
-    let targetX = -100
-    let targetY = -100
+    let currentX = -120
+    let currentY = -120
+    let targetX = -120
+    let targetY = -120
+    let lastTargetX = -120
+    let lastTargetY = -120
+    const bubbleSize = 40
+    const dotSize = 8
 
     const animate = () => {
       currentX += (targetX - currentX) * 0.14
       currentY += (targetY - currentY) * 0.14
-      cursor.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`
+
+      const leadX = targetX - currentX
+      const leadY = targetY - currentY
+      const speed = Math.hypot(targetX - lastTargetX, targetY - lastTargetY)
+      const stretch = Math.min(0.34, speed / 18)
+      const angle = Math.atan2(leadY, leadX)
+      const scaleX = 1 + stretch
+      const scaleY = 1 - stretch * 0.55
+      const wobble = Math.sin(Date.now() * 0.01) * 5
+      const r1 = 52 + wobble + stretch * 16
+      const r2 = 46 - wobble * 0.5
+      const r3 = 58 - wobble * 0.7 + stretch * 10
+      const r4 = 44 + wobble * 0.6
+
+      bubble.style.transform = `translate3d(${currentX - bubbleSize / 2}px, ${currentY - bubbleSize / 2}px, 0) rotate(${angle}rad) scale(${scaleX}, ${scaleY})`
+      bubble.style.borderRadius = `${r1}% ${r2}% ${r3}% ${r4}% / ${r3}% ${r1}% ${r4}% ${r2}%`
+      lastTargetX = targetX
+      lastTargetY = targetY
       rafId = requestAnimationFrame(animate)
     }
 
     const moveCursor = (event: PointerEvent) => {
-      targetX = event.clientX - 20
-      targetY = event.clientY - 20
-      cursor.style.opacity = '1'
+      targetX = event.clientX
+      targetY = event.clientY
+      dot.style.transform = `translate3d(${targetX - dotSize / 2}px, ${targetY - dotSize / 2}px, 0)`
+      bubble.style.opacity = '1'
+      dot.style.opacity = '1'
     }
 
     const hideCursor = () => {
-      cursor.style.opacity = '0'
+      bubble.style.opacity = '0'
+      dot.style.opacity = '0'
     }
 
     window.addEventListener('pointermove', moveCursor, { passive: true })
@@ -158,27 +210,60 @@ function App() {
   async function fetchProjects() {
     try {
       setLoadingProjects(true)
-      const response = await fetch(`https://api.github.com/users/${GITHUB_USER}/repos?sort=updated&per_page=20`)
+
+      const response = await fetch(`/api/github-repos?username=${encodeURIComponent(GITHUB_USER)}&t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      })
 
       if (!response.ok) {
-        throw new Error(`GitHub error ${response.status}`)
+        throw new Error(`GitHub function error ${response.status}`)
       }
 
-      const data = (await response.json()) as Repo[]
-      const userRepos = data.filter((repo) => !repo.fork && repo.owner?.login?.toLowerCase() === GITHUB_USER)
-      const featured = [...userRepos]
+      const data = (await response.json()) as GithubReposApiResponse
+      const userRepos = (data.repos ?? []).filter((repo) => repo.owner?.login?.toLowerCase() === GITHUB_USER)
+      setTotalRepoCount(userRepos.length)
+
+      const pinnedOrder = new Map<string, number>()
+      userRepos.forEach((repo) => {
+        const index = repo.pinned_index
+        if (typeof index === 'number') {
+          pinnedOrder.set(repo.name.toLowerCase(), index)
+        }
+      })
+
+      const sortedRepos = [...userRepos].sort(
+        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+      )
+
+      const pinnedRepos = [...userRepos]
+        .filter((repo) => pinnedOrder.has(repo.name.toLowerCase()))
+        .sort((a, b) => (pinnedOrder.get(a.name.toLowerCase()) ?? 999) - (pinnedOrder.get(b.name.toLowerCase()) ?? 999))
+
+      const nonPinned = [...userRepos]
+        .filter((repo) => !pinnedOrder.has(repo.name.toLowerCase()))
         .sort(
           (a, b) =>
             b.stargazers_count - a.stargazers_count ||
             new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
         )
-        .slice(0, 6)
 
-      setRepos(userRepos)
-      setFeaturedRepos(featured)
+      const featuredRaw = [...pinnedRepos, ...nonPinned].slice(0, 6)
+      const visibleRaw = sortedRepos
+
+      const toRepoView = (repo: Repo): RepoView => ({
+        ...repo,
+        isPinned: (repo as GithubReposApiResponse['repos'][number]).is_pinned === true || pinnedOrder.has(repo.name.toLowerCase()),
+        topLanguages: (repo as GithubReposApiResponse['repos'][number]).top_languages ?? (repo.language ? [repo.language] : []),
+        pinnedIndex: pinnedOrder.get(repo.name.toLowerCase()),
+      })
+
+      setRepos(visibleRaw.map(toRepoView))
+      setFeaturedRepos(featuredRaw.map(toRepoView))
       setProjectsError('')
-    } catch {
-      setProjectsError('Could not load projects from GitHub right now.')
+    } catch (error) {
+      console.error(error)
+      setProjectsError('Could not load pinned repositories right now. Check deployment env vars (GITHUB_TOKEN, GITHUB_USERNAME).')
     } finally {
       setLoadingProjects(false)
     }
@@ -201,6 +286,31 @@ function App() {
     const found = fallbackAnswers.find((item) => item.trigger.some((token) => lower.includes(token)))
     if (found) return found.text
     return 'Risanth builds polished full-stack products and integrates AI where it provides real value to users.'
+  }
+
+  function formatRelativeDate(dateString: string) {
+    const target = new Date(dateString).getTime()
+    const diffMs = target - Date.now()
+    const dayMs = 24 * 60 * 60 * 1000
+    const dayDiff = Math.round(diffMs / dayMs)
+    if (Math.abs(dayDiff) < 1) return 'today'
+    if (Math.abs(dayDiff) < 30) return `${Math.abs(dayDiff)} day${Math.abs(dayDiff) === 1 ? '' : 's'} ago`
+    const monthDiff = Math.round(Math.abs(dayDiff) / 30)
+    if (monthDiff < 12) return `${monthDiff} month${monthDiff === 1 ? '' : 's'} ago`
+    const yearDiff = Math.round(monthDiff / 12)
+    return `${yearDiff} year${yearDiff === 1 ? '' : 's'} ago`
+  }
+
+  function languageColor(language: string) {
+    const normalized = language.toLowerCase()
+    if (normalized.includes('typescript')) return '#3b82f6'
+    if (normalized.includes('javascript')) return '#facc15'
+    if (normalized.includes('python')) return '#60a5fa'
+    if (normalized.includes('css')) return '#a855f7'
+    if (normalized.includes('html')) return '#f97316'
+    if (normalized.includes('shell')) return '#84cc16'
+    if (normalized.includes('sql')) return '#38bdf8'
+    return '#94a3b8'
   }
 
   async function askOpenAI(question: string) {
@@ -263,9 +373,8 @@ function App() {
 
   return (
     <div className={`theme-root ${theme === 'dark' ? 'theme-dark' : 'theme-light'} relative min-h-screen overflow-x-hidden`}>
-      <div ref={cursorRef} className="cursor-orb hidden md:block" aria-hidden="true">
-        <span className="cursor-dot" />
-      </div>
+      <div ref={cursorBubbleRef} className="cursor-bubble hidden md:block" aria-hidden="true" />
+      <span ref={cursorDotRef} className="cursor-dot hidden md:block" aria-hidden="true" />
 
       <div className="stars-layer" aria-hidden="true">
         {stars.map((star) => (
@@ -299,7 +408,7 @@ function App() {
           </nav>
 
           <div className="hidden items-center gap-4 md:flex">
-            <a className="theme-btn-primary rounded-full px-5 py-2 text-sm font-semibold" href="/Resume_Risanth.pdf" target="_blank" rel="noreferrer">
+            <a className="theme-btn-primary rounded-full px-5 py-2 text-sm font-semibold" href="/skills/Resume_Risanth.pdf" download="Resume_Risanth.pdf">
               Resume
             </a>
             <button
@@ -387,7 +496,7 @@ function App() {
                   )}
                 </span>
               </button>
-              <a className="theme-btn-primary rounded-full px-4 py-2 text-center font-semibold" href="/Resume_Risanth.pdf" target="_blank" rel="noreferrer">
+              <a className="theme-btn-primary rounded-full px-4 py-2 text-center font-semibold" href="/skills/Resume_Risanth.pdf" download="Resume_Risanth.pdf">
                 Resume
               </a>
             </div>
@@ -410,7 +519,7 @@ function App() {
               <a href="#projects" className="theme-btn-primary rounded-full px-5 py-2.5 font-semibold">
                 View Projects
               </a>
-              <a href="/Resume_Risanth.pdf" target="_blank" rel="noreferrer" className="theme-btn-outline rounded-full border px-5 py-2.5 font-semibold">
+              <a href="/skills/Resume_Risanth.pdf" download="Resume_Risanth.pdf" className="theme-btn-outline rounded-full border px-5 py-2.5 font-semibold">
                 Download Resume
               </a>
               <a href="#contact" className="theme-btn-outline rounded-full border px-5 py-2.5 font-semibold">
@@ -459,8 +568,7 @@ function App() {
           </h2>
 
           <p className="theme-muted mx-auto mt-5 max-w-3xl text-center text-base leading-8 md:text-lg">
-            Ontario Tech Software Engineering student building maintainable web applications with measurable results,
-            including 35% traffic growth and 30% fewer manual follow-ups.
+            Ontario Tech Software Engineering Co-op student building scalable, user-focused web products.
           </p>
 
           <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -469,28 +577,28 @@ function App() {
               <h3 className="mt-4 font-[Space_Grotesk] text-2xl font-semibold">University</h3>
               <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Ontario Tech University</p>
               <p className="theme-muted mt-4 text-sm leading-7">
-                Bachelor of Engineering in Software Engineering Co-op (Honours), with coursework across algorithms,
-                data structures, databases, AI, and web programming.
+                BEng Software Engineering Co-op (Honours), Sep 2023 - Apr 2027. Focused on algorithms, databases, AI,
+                software design, and web development.
               </p>
             </article>
 
             <article className="theme-panel rounded-3xl border p-6">
               <p className="text-xl">💼</p>
               <h3 className="mt-4 font-[Space_Grotesk] text-2xl font-semibold">Experience</h3>
-              <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Web Development + Operations</p>
+              <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Full-Stack + Operations</p>
               <p className="theme-muted mt-4 text-sm leading-7">
-                Delivered production website improvements at Lex Marketing Inc and Dancing DJ Andre, and currently work
-                at Walmart where I support fast-paced operations with consistency, safety, and execution discipline.
+                Built full-stack products at ConnectToTalent and TandemTeach using React, Next.js, Node.js, and
+                PostgreSQL. Also work at Walmart, supporting fast-paced operations and safety standards.
               </p>
             </article>
 
             <article className="theme-panel rounded-3xl border p-6">
               <p className="text-xl">📈</p>
               <h3 className="mt-4 font-[Space_Grotesk] text-2xl font-semibold">Projects</h3>
-              <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Full-Stack Builds</p>
+              <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Recent Full-Stack Projects</p>
               <p className="theme-muted mt-4 text-sm leading-7">
-                Built projects like Forge Fit (React + Firebase), a Flask leave-of-absence dashboard with PostgreSQL,
-                and a browser-based version control editor with undo/redo and snapshot history.
+                Built RotateOps for workflow automation, a Leave-Of-Absence Dashboard with Flask + PostgreSQL, and
+                Solora Tech with React/Next.js/Tailwind for scalable, high-performance web experiences.
               </p>
             </article>
           </div>
@@ -498,23 +606,23 @@ function App() {
 
         <section id="projects" className="pt-20">
           <div className="flex items-end justify-between gap-3">
-            <h2 className="font-[Space_Grotesk] text-3xl font-bold md:text-4xl">Selected Projects</h2>
+            <h2 className="font-[Space_Grotesk] text-3xl font-bold md:text-4xl">
+              <span className="text-current">Selected </span>
+              <span className="skills-title-accent">Projects</span>
+            </h2>
             <a href="https://github.com/risanth14?tab=repositories" target="_blank" rel="noreferrer" className="theme-link text-sm font-semibold">
               View all {GITHUB_USER} repositories
             </a>
           </div>
-          <p className="theme-muted mt-3 text-sm">
-            Repositories and project cards below are pulled from GitHub user: <span className="font-semibold">{GITHUB_USER}</span>.
-          </p>
 
-          <div className="mt-6 grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
-            <article className="theme-panel rounded-2xl border p-4">
+          <div className="mt-6 grid gap-4 xl:grid-cols-[0.88fr_1.12fr]">
+            <article className="theme-panel flex h-[774px] flex-col rounded-2xl border p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="font-[Space_Grotesk] text-lg font-semibold">Repositories</h3>
-                <span className="theme-chip rounded-full border px-3 py-1 text-xs">{repos.length}</span>
+                <span className="theme-chip rounded-full border px-3 py-1 text-xs">{totalRepoCount}</span>
               </div>
 
-              <div className="max-h-[480px] space-y-2 overflow-y-auto pr-1">
+              <div className="project-scroll min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-1">
                 {loadingProjects && <p className="theme-muted text-sm">Loading repositories...</p>}
                 {!loadingProjects && projectsError && <p className="text-sm text-amber-500">{projectsError}</p>}
                 {!loadingProjects && !projectsError && repos.length === 0 && (
@@ -529,39 +637,88 @@ function App() {
                       href={repo.html_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="theme-sub-panel block rounded-xl border p-3 transition"
+                      className="theme-sub-panel block rounded-xl border px-3 py-2.5 transition"
                     >
-                      <p className="font-semibold">{repo.name}</p>
-                      <p className="theme-muted mt-1 text-xs">
-                        {repo.language || 'Mixed'} � Updated {new Date(repo.updated_at).toLocaleDateString()}
-                      </p>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-[Space_Grotesk] text-[1.1rem] font-semibold leading-tight">{repo.name}</p>
+                        <div className="flex items-center gap-2">
+                          {repo.isPinned && (
+                            <span className="theme-chip rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em]">
+                              Pinned
+                            </span>
+                          )}
+                          <span className="theme-muted text-xs">* {repo.stargazers_count}</span>
+                        </div>
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
+                        {repo.topLanguages.map((lang) => (
+                          <span key={`${repo.id}-${lang}`} className="theme-muted inline-flex items-center gap-1">
+                            <span
+                              className="inline-block h-2.5 w-2.5 rounded-full"
+                              style={{ backgroundColor: languageColor(lang) }}
+                              aria-hidden="true"
+                            />
+                            {lang}
+                          </span>
+                        ))}
+                        {repo.topLanguages.length === 0 && (
+                          <span className="theme-muted inline-flex items-center gap-1">
+                            <span className="inline-block h-2.5 w-2.5 rounded-full bg-slate-400" aria-hidden="true" />
+                            Mixed
+                          </span>
+                        )}
+                        <span className="theme-muted">-</span>
+                        <span className="theme-muted">{formatRelativeDate(repo.updated_at)}</span>
+                      </div>
                     </a>
                   ))}
               </div>
             </article>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid h-[774px] gap-3 md:grid-cols-2 md:grid-rows-3">
               {!loadingProjects &&
                 !projectsError &&
                 featuredRepos.map((repo) => (
-                  <article key={repo.id} className="theme-panel rounded-2xl border p-5">
-                    <h3 className="font-[Space_Grotesk] text-xl font-semibold">{repo.name}</h3>
-                    <p className="theme-muted mt-2 min-h-16 text-sm leading-6">
+                  <article key={repo.id} className="theme-panel flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="line-clamp-2 pr-2 font-[Space_Grotesk] text-[1.35rem] leading-tight font-semibold">
+                        {repo.name}
+                      </h3>
+                      {repo.isPinned && (
+                        <span className="theme-chip rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em]">
+                          Pinned
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1.5 text-sm font-semibold text-amber-300">
+                      {repo.stargazers_count} stars, {repo.forks_count} forks, {repo.language || 'Mixed'}
+                    </p>
+                    <p className="theme-muted mt-2 line-clamp-2 min-h-10 text-sm leading-5">
                       {repo.description || 'No description available yet.'}
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                      <span className="theme-chip rounded-full border px-3 py-1">{repo.language || 'Mixed'}</span>
-                      <span className="theme-chip rounded-full border px-3 py-1">Stars: {repo.stargazers_count}</span>
+                    <div className="mt-3 flex flex-wrap content-start gap-2 text-xs">
+                      {(repo.topLanguages.length ? repo.topLanguages : [repo.language || 'Mixed']).slice(0, 3).map((lang) => (
+                        <span key={`${repo.id}-tile-${lang}`} className="theme-chip rounded-full border px-3 py-1">
+                          <span className="inline-flex items-center gap-1">
+                            <span
+                              className="inline-block h-2 w-2 rounded-full"
+                              style={{ backgroundColor: languageColor(lang) }}
+                              aria-hidden="true"
+                            />
+                            {lang}
+                          </span>
+                        </span>
+                      ))}
                     </div>
-                    <div className="mt-4 flex gap-2">
-                      <a href={repo.html_url} target="_blank" rel="noreferrer" className="theme-btn-outline rounded-full border px-4 py-2 text-xs font-semibold">
-                        GitHub
-                      </a>
-                      {repo.homepage && (
-                        <a href={repo.homepage} target="_blank" rel="noreferrer" className="theme-btn-primary rounded-full px-4 py-2 text-xs font-semibold">
-                          Live
-                        </a>
-                      )}
+                    <div className="mt-auto flex items-center justify-between gap-2 pt-3">
+                      <span className="theme-muted text-xs">Updated {formatRelativeDate(repo.updated_at)}</span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRepo(repo)}
+                        className="theme-btn-outline rounded-full border px-4 py-2 text-xs font-semibold"
+                      >
+                        Click For Details
+                      </button>
                     </div>
                   </article>
                 ))}
@@ -598,6 +755,63 @@ function App() {
           </div>
         </section>
       </main>
+
+      {selectedRepo && (
+        <div className="fixed inset-0 z-[70] bg-[rgba(2,8,24,0.72)] backdrop-blur-sm" onClick={() => setSelectedRepo(null)}>
+          <section
+            className="theme-panel mx-auto mt-[8vh] w-[min(760px,92vw)] rounded-3xl border p-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] md:p-8"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <p className="theme-muted text-[11px] font-semibold uppercase tracking-[0.18em]">
+                  {selectedRepo.isPinned ? 'Pinned Project' : 'Project'}
+                </p>
+                <h3 className="mt-1 font-[Space_Grotesk] text-4xl font-bold leading-tight">{selectedRepo.name}</h3>
+                <p className="mt-2 text-sm font-semibold text-amber-300">
+                  {selectedRepo.stargazers_count} stars, {selectedRepo.forks_count} forks, {selectedRepo.language || 'Mixed'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedRepo(null)}
+                className="theme-btn-outline rounded-xl border px-3 py-1 text-sm font-semibold"
+              >
+                X
+              </button>
+            </div>
+
+            <p className="theme-muted text-sm leading-7">
+              {selectedRepo.description || 'No description available yet. Open the repository for full details.'}
+            </p>
+
+            <div className="mt-5">
+              <p className="theme-muted text-[11px] font-semibold uppercase tracking-[0.18em]">Languages</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(selectedRepo.topLanguages.length ? selectedRepo.topLanguages : [selectedRepo.language || 'Mixed']).map((lang) => (
+                  <span key={`modal-lang-${selectedRepo.id}-${lang}`} className="theme-chip rounded-full border px-3 py-1 text-xs">
+                    <span className="inline-flex items-center gap-1">
+                      <span
+                        className="inline-block h-2 w-2 rounded-full"
+                        style={{ backgroundColor: languageColor(lang) }}
+                        aria-hidden="true"
+                      />
+                      {lang}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
+              <p className="theme-muted text-xs">Updated {formatRelativeDate(selectedRepo.updated_at)}</p>
+              <a href={selectedRepo.html_url} target="_blank" rel="noreferrer" className="theme-btn-primary rounded-full px-5 py-2 text-sm font-semibold">
+                View On GitHub
+              </a>
+            </div>
+          </section>
+        </div>
+      )}
 
       <button
         type="button"
