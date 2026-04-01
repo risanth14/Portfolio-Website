@@ -690,8 +690,8 @@ function App() {
             Next.js, Node.js, Express, and PostgreSQL.
           </p>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            <article className="theme-panel rounded-3xl border p-6">
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              <article className="theme-panel about-glow-card rounded-3xl border p-6">
               <p className="text-xl">🎓</p>
               <h3 className="mt-4 font-[Space_Grotesk] text-2xl font-semibold">University</h3>
               <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Ontario Tech University</p>
@@ -701,7 +701,7 @@ function App() {
               </p>
             </article>
 
-            <article className="theme-panel rounded-3xl border p-6">
+              <article className="theme-panel about-glow-card rounded-3xl border p-6">
               <p className="text-xl">💼</p>
               <h3 className="mt-4 font-[Space_Grotesk] text-2xl font-semibold">Experience</h3>
               <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Full-Stack Development</p>
@@ -711,7 +711,7 @@ function App() {
               </p>
             </article>
 
-            <article className="theme-panel rounded-3xl border p-6">
+              <article className="theme-panel about-glow-card rounded-3xl border p-6">
               <p className="text-xl">📈</p>
               <h3 className="mt-4 font-[Space_Grotesk] text-2xl font-semibold">Projects</h3>
               <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Recent Full-Stack Projects</p>
@@ -809,11 +809,11 @@ function App() {
               </div>
             </article>
 
-            <div className="grid h-[774px] gap-3 md:grid-cols-2 md:grid-rows-3">
+            <div className="grid gap-3 md:h-[774px] md:grid-cols-2 md:grid-rows-3">
               {!loadingProjects &&
                 !projectsError &&
                 featuredRepos.map((repo) => (
-                  <article key={repo.id} className="theme-panel flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border p-4">
+                  <article key={repo.id} className="theme-panel flex h-auto flex-col rounded-2xl border p-4 md:h-full md:min-h-0 md:overflow-hidden">
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="line-clamp-2 pr-2 font-[Space_Grotesk] text-[1.35rem] leading-tight font-semibold">
                         {repo.name}
@@ -865,7 +865,7 @@ function App() {
           </h2>
           <div className="relative mt-6 space-y-4 md:space-y-7">
             <div
-              className="absolute bottom-0 left-1/2 top-0 hidden w-px -translate-x-1/2 bg-white/65 shadow-[0_0_14px_rgba(255,255,255,0.45)] md:block"
+              className="timeline-spine absolute bottom-0 left-1/2 top-0 hidden w-[5px] -translate-x-1/2 md:block"
               aria-hidden="true"
             />
             {experienceTimeline.map((item, index) => {
@@ -873,7 +873,7 @@ function App() {
               return (
                 <div key={item.id} className="relative md:grid md:grid-cols-2 md:gap-10">
                   <span
-                    className="absolute left-1/2 top-8 hidden h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-white bg-[#041335] shadow-[0_0_10px_rgba(147,197,253,0.8)] md:block"
+                    className="timeline-node absolute left-1/2 top-8 hidden h-3.5 w-3.5 -translate-x-1/2 rounded-full border-2 border-white bg-[#041335] md:block"
                     aria-hidden="true"
                   />
                   <div className={isLeft ? 'md:col-start-1' : 'hidden md:block'} />
