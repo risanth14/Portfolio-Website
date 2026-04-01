@@ -172,6 +172,8 @@ function App() {
   const [contactStatusText, setContactStatusText] = useState('')
   const cursorBubbleRef = useRef<HTMLDivElement | null>(null)
   const cursorDotRef = useRef<HTMLDivElement | null>(null)
+  const mobileMenuRef = useRef<HTMLElement | null>(null)
+  const menuToggleRef = useRef<HTMLButtonElement | null>(null)
   const currentYear = useMemo(() => new Date().getFullYear(), [])
 
   const stars = useMemo(
@@ -261,6 +263,21 @@ function App() {
       window.removeEventListener('pointerleave', hideCursor)
     }
   }, [])
+
+  useEffect(() => {
+    if (!menuOpen) return
+
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null
+      if (!target) return
+      if (mobileMenuRef.current?.contains(target)) return
+      if (menuToggleRef.current?.contains(target)) return
+      setMenuOpen(false)
+    }
+
+    window.addEventListener('pointerdown', onPointerDown)
+    return () => window.removeEventListener('pointerdown', onPointerDown)
+  }, [menuOpen])
   async function fetchProjects() {
     try {
       setLoadingProjects(true)
@@ -533,27 +550,29 @@ function App() {
             </button>
           </div>
 
-          <button
-            type="button"
-            className="theme-menu-btn rounded-full border px-4 py-1.5 text-sm font-semibold md:hidden"
-            onClick={() => setMenuOpen((value) => !value)}
-          >
-            Menu
-          </button>
+            <button
+              type="button"
+              ref={menuToggleRef}
+              className="theme-menu-btn rounded-full border px-4 py-1.5 text-sm font-semibold md:hidden"
+              onClick={() => setMenuOpen((value) => !value)}
+            >
+              Menu
+            </button>
 
-          <nav
-            className={`${menuOpen ? 'flex' : 'hidden'} theme-nav absolute right-3 top-16 z-50 w-72 flex-col rounded-2xl border p-4 text-sm md:hidden`}
-          >
-            {navItems.map((item) => (
-              <a
-                key={item.id}
-                href={`#${item.id}`}
-                className="theme-nav-link theme-nav-link-animated font-[Space_Grotesk] font-medium"
-                onClick={() => setMenuOpen(false)}
-              >
-                {item.label}
-              </a>
-            ))}
+            <nav
+              ref={mobileMenuRef}
+              className={`${menuOpen ? 'flex' : 'hidden'} theme-nav theme-nav-mobile absolute left-3 right-3 top-[calc(100%+0.65rem)] z-50 flex-col rounded-2xl border p-4 text-sm md:hidden`}
+            >
+              {navItems.map((item) => (
+                <a
+                  key={item.id}
+                  href={`#${item.id}`}
+                  className="theme-nav-link theme-nav-mobile-link font-[Space_Grotesk] font-medium"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item.label}
+                </a>
+              ))}
 
             <div className="mt-2 flex items-center justify-between">
               <button

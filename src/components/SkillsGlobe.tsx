@@ -78,6 +78,8 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
   const globeWrapRef = useRef<HTMLDivElement>(null)
   const hoveredRef = useRef<string | null>(null)
   const [activeCategory, setActiveCategory] = useState<SkillCategory | null>(null)
+  const [isMobileViewport, setIsMobileViewport] = useState(false)
+  const [mobileGlobeHeight, setMobileGlobeHeight] = useState(420)
   const [hovered, setHovered] = useState<{
     name: string
     x: number
@@ -89,6 +91,17 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
     () => (activeCategory ? SKILLS.filter((skill) => skill.category === activeCategory) : SKILLS),
     [activeCategory],
   )
+
+  useEffect(() => {
+    const updateViewport = () => {
+      const width = window.innerWidth
+      setIsMobileViewport(width < 768)
+      setMobileGlobeHeight(Math.round(Math.max(380, Math.min(460, width * 0.92))))
+    }
+    updateViewport()
+    window.addEventListener('resize', updateViewport)
+    return () => window.removeEventListener('resize', updateViewport)
+  }, [])
 
   useEffect(() => {
     if (!activeCategory) return
@@ -110,13 +123,15 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
     if (!container || visibleSkills.length === 0) return
 
     const width = container.clientWidth
-    const height = GLOBE_HEIGHT
+    const height = isMobileViewport
+      ? Math.round(Math.max(380, Math.min(460, width * 1.15)))
+      : GLOBE_HEIGHT
     const accent = activeCategory ? CATEGORY_CONFIG[activeCategory].accentHex : '#3b82f6'
     const accentColor = new THREE.Color(accent)
 
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
-    camera.position.z = 14
+    const camera = new THREE.PerspectiveCamera(isMobileViewport ? 50 : 45, width / height, 0.1, 1000)
+    camera.position.z = isMobileViewport ? 15 : 14
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
     renderer.setSize(width, height)
@@ -127,7 +142,7 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
     const globe = new THREE.Group()
     scene.add(globe)
 
-    const RADIUS = 5
+    const RADIUS = isMobileViewport ? 4.15 : 5
     const sphereGeo = new THREE.IcosahedronGeometry(RADIUS, 2)
     const sphereMat = new THREE.MeshBasicMaterial({
       color: accentColor,
@@ -188,7 +203,7 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
           const img = texture.image as HTMLImageElement | undefined
           if (img?.width && img?.height) {
             const aspect = img.width / img.height
-            const base = 0.9
+            const base = isMobileViewport ? 0.72 : 0.9
             sprite.scale.set(base * aspect, base, 1)
             sprite.userData.baseScale = base
             sprite.userData.aspect = aspect
@@ -313,7 +328,7 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
         let opacity = t > 0.6 ? 0.92 + t * 0.08 : t > 0.3 ? 0.45 + t * 0.28 : 0.18 + t * 0.18
 
         if (isHovered) {
-          scale = 1.9
+          scale = isMobileViewport ? 1.55 : 1.9
           opacity = 1
         }
 
@@ -366,9 +381,12 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
 
     const onResize = () => {
       const w = container.clientWidth
-      camera.aspect = w / height
+      const h = isMobileViewport
+        ? Math.round(Math.max(380, Math.min(460, w * 1.15)))
+        : GLOBE_HEIGHT
+      camera.aspect = w / h
       camera.updateProjectionMatrix()
-      renderer.setSize(w, height)
+      renderer.setSize(w, h)
     }
     window.addEventListener('resize', onResize)
 
@@ -388,7 +406,7 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
       hoveredRef.current = null
       if (container.contains(el)) container.removeChild(el)
     }
-  }, [activeCategory, theme, visibleSkills])
+  }, [activeCategory, isMobileViewport, theme, visibleSkills])
 
   return (
     <section id="skills" className="pt-20">
@@ -443,8 +461,15 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
         })}
       </div>
 
-      <div ref={globeWrapRef} className="relative mx-auto max-w-[1060px] px-2 py-4 md:px-5 md:py-6">
-        <div ref={containerRef} className="relative mx-auto" style={{ maxWidth: 860, height: GLOBE_HEIGHT }}>
+      <div ref={globeWrapRef} className="relative mx-auto max-w-[1060px] overflow-hidden px-2 py-4 md:px-5 md:py-6">
+        <div
+          ref={containerRef}
+          className="relative mx-auto w-full"
+          style={{
+            maxWidth: isMobileViewport ? 680 : 860,
+            height: isMobileViewport ? mobileGlobeHeight : GLOBE_HEIGHT,
+          }}
+        >
           {hovered && (
             <div
               className="pointer-events-none absolute z-50 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide"
