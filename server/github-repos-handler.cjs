@@ -171,7 +171,13 @@ async function handler(event) {
     }
   }
 
-  const username = (event.queryStringParameters?.username || process.env.GITHUB_USERNAME || '').trim()
+  const username = (
+    event.queryStringParameters?.username ||
+    process.env.GITHUB_USERNAME ||
+    process.env.VERCEL_GITHUB_USERNAME ||
+    process.env.PORTFOLIO_GITHUB_USERNAME ||
+    ''
+  ).trim()
   if (!username) {
     return {
       statusCode: 400,
@@ -180,12 +186,20 @@ async function handler(event) {
     }
   }
 
-  const token = (process.env.GITHUB_TOKEN || '').trim()
+  const token = (
+    process.env.GITHUB_TOKEN ||
+    process.env.VERCEL_GITHUB_TOKEN ||
+    process.env.PORTFOLIO_GITHUB_TOKEN ||
+    ''
+  ).trim()
   if (!token) {
     return {
       statusCode: 500,
       headers: CORS_HEADERS,
-      body: JSON.stringify({ error: 'missing_token' }),
+      body: JSON.stringify({
+        error: 'missing_token',
+        hint: 'Set one of: GITHUB_TOKEN, VERCEL_GITHUB_TOKEN, PORTFOLIO_GITHUB_TOKEN',
+      }),
     }
   }
 
