@@ -77,6 +77,7 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
   const filterBarRef = useRef<HTMLDivElement>(null)
   const globeWrapRef = useRef<HTMLDivElement>(null)
   const hoveredRef = useRef<string | null>(null)
+  const activeCategoryRef = useRef<SkillCategory | null>(null)
   const [activeCategory, setActiveCategory] = useState<SkillCategory | null>(null)
   const [isMobileViewport, setIsMobileViewport] = useState(false)
   const [mobileGlobeHeight, setMobileGlobeHeight] = useState(420)
@@ -93,6 +94,10 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
   )
 
   useEffect(() => {
+    activeCategoryRef.current = activeCategory
+  }, [activeCategory])
+
+  useEffect(() => {
     const updateViewport = () => {
       const width = window.innerWidth
       setIsMobileViewport(width < 768)
@@ -104,30 +109,15 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
   }, [])
 
   useEffect(() => {
-    if (!activeCategory) return
-
-    const onWindowPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node | null
-      if (!target) return
-      if (filterBarRef.current?.contains(target)) return
-      if (globeWrapRef.current?.contains(target)) return
-      setActiveCategory(null)
-    }
-
-    window.addEventListener('pointerdown', onWindowPointerDown)
-    return () => window.removeEventListener('pointerdown', onWindowPointerDown)
-  }, [activeCategory])
-
-  useEffect(() => {
     const container = containerRef.current
-    if (!container || visibleSkills.length === 0) return
+    if (!container || SKILLS.length === 0) return
 
     const width = container.clientWidth
     const height = isMobileViewport
       ? Math.round(Math.max(380, Math.min(460, width * 1.15)))
       : GLOBE_HEIGHT
-    const accent = activeCategory ? CATEGORY_CONFIG[activeCategory].accentHex : '#3b82f6'
-    const accentColor = new THREE.Color(accent)
+    const accentColor = new THREE.Color('#3b82f6')
+    const currentAccentColor = accentColor.clone()
 
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(isMobileViewport ? 50 : 45, width / height, 0.1, 1000)
@@ -175,8 +165,8 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
     const iconSprites: THREE.Sprite[] = []
     const loader = new THREE.TextureLoader()
 
-    visibleSkills.forEach((skill, i) => {
-      const phi = Math.acos(1 - (2 * (i + 0.5)) / visibleSkills.length)
+    SKILLS.forEach((skill, i) => {
+      const phi = Math.acos(1 - (2 * (i + 0.5)) / SKILLS.length)
       const theta = Math.PI * (1 + Math.sqrt(5)) * i
 
       const x = RADIUS * Math.sin(phi) * Math.cos(theta)
@@ -192,7 +182,7 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
       const sprite = new THREE.Sprite(spriteMat)
       sprite.position.set(x, y, z)
       sprite.scale.set(1, 1, 1)
-      sprite.userData = { name: skill.name, baseColor: skill.color, baseScale: 1 }
+      sprite.userData = { name: skill.name, baseColor: skill.color, baseScale: 1, category: skill.category, filterAlpha: 1 }
 
       loader.load(
         skill.logo,
@@ -309,14 +299,23 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
       globe.rotation.x += velocity.x
       globe.rotation.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, globe.rotation.x))
 
-      sphereMat.color.copy(accentColor)
+      const currentCategory = activeCategoryRef.current
+      const targetAccentColor = new THREE.Color(currentCategory ? CATEGORY_CONFIG[currentCategory].accentHex : '#3b82f6')
+      currentAccentColor.lerp(targetAccentColor, 0.08)
+
+      sphereMat.color.copy(currentAccentColor)
       sphereMat.opacity = theme === 'light' ? 0.16 : 0.1
       ringMats.forEach((mat, idx) => {
-        mat.color.copy(accentColor)
+        mat.color.copy(currentAccentColor)
         mat.opacity = (theme === 'light' ? 0.16 : 0.1) - idx * 0.03
       })
 
       iconSprites.forEach((sprite) => {
+        const isCategoryMatch = !currentCategory || sprite.userData.category === currentCategory
+        const targetFilterAlpha = isCategoryMatch ? 1 : 0
+        const nextFilterAlpha = (sprite.userData.filterAlpha ?? 1) + (targetFilterAlpha - (sprite.userData.filterAlpha ?? 1)) * 0.12
+        sprite.userData.filterAlpha = nextFilterAlpha
+
         const worldPos = sprite.position.clone().applyMatrix4(globe.matrixWorld)
         const dist = worldPos.distanceTo(camera.position)
         const minD = camera.position.z - RADIUS
@@ -332,6 +331,10 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
           opacity = 1
         }
 
+        scale *= 0.74 + (nextFilterAlpha * 0.26)
+        opacity *= nextFilterAlpha
+        sprite.visible = nextFilterAlpha > 0.03
+
         const aspect = sprite.userData.aspect ?? 1
         const baseScale = sprite.userData.baseScale ?? 0.9
         const s = scale * baseScale
@@ -342,7 +345,9 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
       globe.children.forEach((child) => {
         if (child.userData?.isGlow) {
           const parentName = child.userData.parentName
-          const isHovered = hoveredRef.current === parentName
+          const parentSprite = iconSprites.find((sprite) => sprite.userData.name === parentName)
+          const visibleAlpha = parentSprite?.userData?.filterAlpha ?? 0
+          const isHovered = hoveredRef.current === parentName && visibleAlpha > 0.12
           ;(child as THREE.Mesh).scale.setScalar(isHovered ? 3.1 : 0)
           ;((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = isHovered ? 0.2 : 0
         }
@@ -406,7 +411,7 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
       hoveredRef.current = null
       if (container.contains(el)) container.removeChild(el)
     }
-  }, [activeCategory, isMobileViewport, theme, visibleSkills])
+  }, [isMobileViewport, theme])
 
   return (
     <section id="skills" className="pt-20">
@@ -426,7 +431,9 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
             <button
               key={category}
               type="button"
-              onClick={() => setActiveCategory(category)}
+              onClick={() => {
+                setActiveCategory((current) => (current === category ? null : category))
+              }}
               className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition ${
                 active
                   ? 'skills-filter-pill-active font-bold'

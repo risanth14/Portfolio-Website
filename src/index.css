@@ -69,19 +69,34 @@ body {
   position: absolute;
   border-radius: 50%;
   background: var(--star);
-  animation: twinkle 3.6s ease-in-out infinite;
+  animation: star-drift 10s linear infinite;
+  will-change: transform, opacity;
 }
 
-@keyframes twinkle {
-  0%,
-  100% {
-    opacity: 0.25;
-    transform: scale(1);
+@keyframes star-drift {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -18px, 0) scale(0.86);
   }
 
-  50% {
-    opacity: 0.95;
-    transform: scale(1.35);
+  12% {
+    opacity: 0.72;
+    transform: translate3d(1px, -6px, 0) scale(1);
+  }
+
+  40% {
+    opacity: 0.9;
+    transform: translate3d(4px, 16px, 0) scale(1.06);
+  }
+
+  70% {
+    opacity: 0.62;
+    transform: translate3d(-5px, 44px, 0) scale(0.98);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(3px, 72px, 0) scale(0.82);
   }
 }
 
@@ -501,6 +516,14 @@ body {
   box-shadow: 0 0 20px color-mix(in srgb, var(--accent-1) 28%, transparent);
 }
 
+.cursor-bubble-clickable {
+  border-color: color-mix(in srgb, var(--accent-2) 78%, transparent);
+  background: color-mix(in srgb, var(--accent-2) 18%, var(--bg-base) 82%);
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--accent-2) 45%, transparent),
+    0 0 34px color-mix(in srgb, var(--accent-2) 30%, transparent);
+}
+
 .cursor-dot {
   position: fixed;
   left: 0;
@@ -513,6 +536,11 @@ body {
   pointer-events: none;
   opacity: 0;
   box-shadow: 0 0 10px color-mix(in srgb, var(--accent-1) 50%, transparent);
+}
+
+.cursor-dot-clickable {
+  background: var(--accent-2);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent-2) 70%, transparent);
 }
 
 .globe-spin {
@@ -713,15 +741,13 @@ body {
 .timeline-spine {
   background: linear-gradient(
     to bottom,
-    rgba(219, 234, 254, 0.35) 0%,
-    rgba(147, 197, 253, 0.6) 22%,
-    rgba(96, 165, 250, 0.75) 50%,
-    rgba(147, 197, 253, 0.55) 78%,
-    rgba(219, 234, 254, 0.3) 100%
+    rgba(226, 238, 255, 0.5) 0%,
+    rgba(219, 234, 254, 0.7) 50%,
+    rgba(226, 238, 255, 0.45) 100%
   );
   box-shadow:
-    0 0 10px rgba(96, 165, 250, 0.42),
-    0 0 22px rgba(96, 165, 250, 0.22);
+    0 0 10px rgba(147, 197, 253, 0.4),
+    0 0 20px rgba(147, 197, 253, 0.22);
   overflow: hidden;
 }
 
@@ -729,35 +755,22 @@ body {
   content: '';
   position: absolute;
   left: 50%;
-  transform: translateX(-50%);
-  top: 74%;
+  transform: translate(-50%, 100%);
+  top: 0;
   width: 8px;
-  height: 26%;
+  height: 100%;
   border-radius: 999px;
   background: linear-gradient(
     to top,
-    rgba(191, 219, 254, 0),
-    rgba(147, 197, 253, 0.35) 36%,
-    rgba(96, 165, 250, 0.92) 74%,
-    rgba(191, 219, 254, 1)
+    color-mix(in srgb, var(--accent-1) 78%, transparent) 0%,
+    color-mix(in srgb, var(--accent-1) 58%, var(--accent-2) 42%) 55%,
+    color-mix(in srgb, var(--accent-2) 80%, white 20%) 100%
   );
-  filter: blur(0.25px);
-  box-shadow: 0 0 18px rgba(96, 165, 250, 0.75);
-  animation: timeline-flow 5.6s linear infinite;
-}
-
-.timeline-spine::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: 45%;
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(191, 219, 254, 0.95) 0%, rgba(96, 165, 250, 0.1) 70%, transparent 100%);
   filter: blur(0.2px);
-  animation: timeline-core-pulse 2.1s ease-in-out infinite;
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--accent-1) 60%, transparent),
+    0 0 22px color-mix(in srgb, var(--accent-2) 38%, transparent);
+  animation: timeline-flow 8.8s linear infinite;
 }
 
 .timeline-node {
@@ -769,17 +782,17 @@ body {
 
 @keyframes timeline-flow {
   0% {
-    top: 74%;
+    transform: translate(-50%, 100%);
     opacity: 0.96;
   }
 
   85% {
-    opacity: 0.94;
+    opacity: 0.93;
   }
 
   100% {
-    top: 0%;
-    opacity: 0.18;
+    transform: translate(-50%, -100%);
+    opacity: 0;
   }
 }
 

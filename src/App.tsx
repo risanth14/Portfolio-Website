@@ -165,6 +165,7 @@ function App() {
   ])
   const [chatBusy, setChatBusy] = useState(false)
   const [selectedRepo, setSelectedRepo] = useState<RepoView | null>(null)
+  const [repoModalOpen, setRepoModalOpen] = useState(false)
   const [contactName, setContactName] = useState('')
   const [contactEmail, setContactEmail] = useState('')
   const [contactMessage, setContactMessage] = useState('')
@@ -174,6 +175,7 @@ function App() {
   const cursorDotRef = useRef<HTMLDivElement | null>(null)
   const mobileMenuRef = useRef<HTMLElement | null>(null)
   const menuToggleRef = useRef<HTMLButtonElement | null>(null)
+  const repoModalCloseTimerRef = useRef<number | null>(null)
   const currentYear = useMemo(() => new Date().getFullYear(), [])
 
   const stars = useMemo(
@@ -182,8 +184,10 @@ function App() {
         id: index,
         left: `${(index * 37) % 100}%`,
         top: `${(index * 53) % 100}%`,
-        delay: `${(index % 17) * 0.35}s`,
+        delay: `${(index % 17) * 0.8}s`,
         size: 1 + (index % 3),
+        driftDuration: `${8 + (index % 7) * 1.1}s`,
+        color: index % 13 === 0 ? '#f8d46a' : index % 9 === 0 ? '#7db8ff' : undefined,
       })),
     [],
   )
@@ -201,6 +205,11 @@ function App() {
   }, [])
 
   useEffect(() => {
+    const openTimer = window.setTimeout(() => setChatOpen(true), 180)
+    return () => window.clearTimeout(openTimer)
+  }, [])
+
+  useEffect(() => {
     if (!window.matchMedia('(pointer: fine)').matches) return
     const bubble = cursorBubbleRef.current
     const dot = cursorDotRef.current
@@ -215,6 +224,14 @@ function App() {
     let lastTargetY = -120
     const bubbleSize = 40
     const dotSize = 8
+
+    const isInteractiveTarget = (target: EventTarget | null) => {
+      if (!(target instanceof Element)) return false
+      const interactive = target.closest('a, button, [role="button"], input, select, textarea, label, [data-cursor-interactive="true"]')
+      if (!interactive) return false
+      const styles = window.getComputedStyle(interactive)
+      return styles.pointerEvents !== 'none'
+    }
 
     const animate = () => {
       currentX += (targetX - currentX) * 0.14
@@ -246,11 +263,16 @@ function App() {
       dot.style.transform = `translate3d(${targetX - dotSize / 2}px, ${targetY - dotSize / 2}px, 0)`
       bubble.style.opacity = '1'
       dot.style.opacity = '1'
+      const interactiveHover = isInteractiveTarget(event.target)
+      bubble.classList.toggle('cursor-bubble-clickable', interactiveHover)
+      dot.classList.toggle('cursor-dot-clickable', interactiveHover)
     }
 
     const hideCursor = () => {
       bubble.style.opacity = '0'
       dot.style.opacity = '0'
+      bubble.classList.remove('cursor-bubble-clickable')
+      dot.classList.remove('cursor-dot-clickable')
     }
 
     window.addEventListener('pointermove', moveCursor, { passive: true })
@@ -343,21 +365,25 @@ function App() {
     return 'Risanth builds polished full-stack products and integrates AI where it provides real value to users.'
   }
 
-  function formatRelativeDate(dateString: string) {
-    const target = new Date(dateString).getTime()
-    const diffMs = target - Date.now()
-    const dayMs = 24 * 60 * 60 * 1000
-    const dayDiff = Math.round(diffMs / dayMs)
-    if (Math.abs(dayDiff) < 1) return 'today'
-    if (Math.abs(dayDiff) < 30) return `${Math.abs(dayDiff)} day${Math.abs(dayDiff) === 1 ? '' : 's'} ago`
-    const monthDiff = Math.round(Math.abs(dayDiff) / 30)
-    if (monthDiff < 12) return `${monthDiff} month${monthDiff === 1 ? '' : 's'} ago`
-    const yearDiff = Math.round(monthDiff / 12)
-    return `${yearDiff} year${yearDiff === 1 ? '' : 's'} ago`
-  }
-
   function languageColor(language: string) {
     const normalized = language.toLowerCase()
+    if (normalized.includes('wordpress')) return '#21759b'
+    if (normalized.includes('seo')) return '#22c55e'
+    if (normalized.includes('responsive')) return '#06b6d4'
+    if (normalized.includes('ui/ux') || normalized.includes('ui') || normalized.includes('ux')) return '#ec4899'
+    if (normalized.includes('front-end') || normalized.includes('frontend')) return '#60a5fa'
+    if (normalized.includes('web content')) return '#f97316'
+    if (normalized.includes('strategy')) return '#f59e0b'
+    if (normalized.includes('operations')) return '#10b981'
+    if (normalized.includes('inventory')) return '#eab308'
+    if (normalized.includes('team collaboration')) return '#8b5cf6'
+    if (normalized.includes('safety')) return '#ef4444'
+    if (normalized.includes('react')) return '#61dafb'
+    if (normalized.includes('next')) return '#e2e8f0'
+    if (normalized.includes('node')) return '#84cc16'
+    if (normalized.includes('express')) return '#9ca3af'
+    if (normalized.includes('aws')) return '#f59e0b'
+    if (normalized.includes('stripe')) return '#7c3aed'
     if (normalized.includes('typescript')) return '#3b82f6'
     if (normalized.includes('javascript')) return '#facc15'
     if (normalized.includes('python')) return '#60a5fa'
@@ -478,6 +504,34 @@ function App() {
     }
   }
 
+  function openRepoModal(repo: RepoView) {
+    if (repoModalCloseTimerRef.current) {
+      window.clearTimeout(repoModalCloseTimerRef.current)
+      repoModalCloseTimerRef.current = null
+    }
+    setSelectedRepo(repo)
+    requestAnimationFrame(() => setRepoModalOpen(true))
+  }
+
+  function closeRepoModal() {
+    setRepoModalOpen(false)
+    if (repoModalCloseTimerRef.current) {
+      window.clearTimeout(repoModalCloseTimerRef.current)
+    }
+    repoModalCloseTimerRef.current = window.setTimeout(() => {
+      setSelectedRepo(null)
+      repoModalCloseTimerRef.current = null
+    }, 260)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (repoModalCloseTimerRef.current) {
+        window.clearTimeout(repoModalCloseTimerRef.current)
+      }
+    }
+  }, [])
+
   return (
     <div className={`theme-root ${theme === 'dark' ? 'theme-dark' : 'theme-light'} relative min-h-screen overflow-x-hidden`}>
       <div ref={cursorBubbleRef} className="cursor-bubble hidden md:block" aria-hidden="true" />
@@ -493,10 +547,30 @@ function App() {
               top: star.top,
               width: `${star.size}px`,
               height: `${star.size}px`,
-              animationDelay: star.delay,
+              animationDelay: `-${star.delay}`,
+              animationDuration: star.driftDuration,
+              backgroundColor: star.color,
+              boxShadow: star.color ? `0 0 8px ${star.color}` : undefined,
             }}
           />
         ))}
+      </div>
+
+      <div className="relative z-50 border-b border-blue-300/30 bg-[linear-gradient(90deg,#1e3a8a,#1d4ed8)] px-4 py-2.5 md:py-3">
+        <p className="text-center font-[Space_Grotesk] text-[12px] font-semibold tracking-[0.08em] text-blue-50 md:text-sm">
+          <span
+            className="mr-2 inline-block h-2 w-2 rounded-full bg-emerald-400 align-middle shadow-[0_0_10px_rgba(52,211,153,0.95)]"
+            style={{ animation: 'pulse 2.8s ease-in-out infinite' }}
+            aria-hidden="true"
+          />
+          Available for co-op roles
+          <span className="mx-2 text-blue-200">•</span> Flexible start dates
+          <span className="mx-2 text-blue-200">•</span> SWE / SRE / AI Engineering
+          <span className="mx-2 text-blue-200">•</span>
+          <a href="mailto:risanth14@gmail.com" className="text-amber-300 transition hover:text-amber-200">
+            risanth14@gmail.com
+          </a>
+        </p>
       </div>
 
       <header className="theme-header sticky top-0 z-40 border-b backdrop-blur-xl">
@@ -648,7 +722,7 @@ function App() {
               <p className="font-[Space_Grotesk] text-lg font-semibold sm:text-xl">Risanth | Full-Stack Developer</p>
               <div className="flex flex-wrap justify-center gap-2">
                 <span className="theme-chip whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold tracking-[0.08em] sm:text-xs">
-                  35% HIGHER TRANSACTION SUCCESS (STRIPE + AWS)
+                  SCALABLE RECRUITMENT PLATFORM
                 </span>
                 <span className="theme-chip whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold tracking-[0.08em] sm:text-xs">
                   FULL-STACK PLATFORM DELIVERY (REACT/NODE/EXPRESS)
@@ -660,7 +734,7 @@ function App() {
               <div className="flex flex-wrap justify-center gap-2">
                 <span className="theme-chip rounded-full border px-3 py-1 text-xs">Actively Seeking Co-op</span>
                 <span className="theme-chip rounded-full border px-3 py-1 text-xs">Toronto, ON</span>
-                <span className="theme-chip rounded-full border px-3 py-1 text-xs">Available 2026</span>
+                <span className="theme-chip rounded-full border px-3 py-1 text-xs">4/8/12/16 Month Co-op</span>
               </div>
               <p className="theme-muted mx-auto max-w-[42ch] text-sm leading-6">
                 Focused on scalable full-stack systems, API performance, and practical AI-powered products.
@@ -781,7 +855,6 @@ function App() {
                               Pinned
                             </span>
                           )}
-                          <span className="theme-muted text-xs">* {repo.stargazers_count}</span>
                         </div>
                       </div>
                       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
@@ -801,8 +874,6 @@ function App() {
                             Mixed
                           </span>
                         )}
-                        <span className="theme-muted">-</span>
-                        <span className="theme-muted">{formatRelativeDate(repo.updated_at)}</span>
                       </div>
                     </a>
                   ))}
@@ -824,32 +895,29 @@ function App() {
                         </span>
                       )}
                     </div>
-                    <p className="mt-1.5 text-sm font-semibold text-amber-300">
-                      {repo.stargazers_count} stars, {repo.forks_count} forks, {repo.language || 'Mixed'}
-                    </p>
+                    <p className="mt-1.5 text-sm font-semibold text-amber-300">{repo.language || 'Mixed'}</p>
                     <p className="theme-muted mt-2 line-clamp-2 min-h-10 text-sm leading-5">
                       {repo.description || 'No description available yet.'}
                     </p>
-                    <div className="mt-3 flex flex-wrap content-start gap-2 text-xs">
-                      {(repo.topLanguages.length ? repo.topLanguages : [repo.language || 'Mixed']).slice(0, 3).map((lang) => (
-                        <span key={`${repo.id}-tile-${lang}`} className="theme-chip rounded-full border px-3 py-1">
+                    <div className="mt-3 flex max-h-8 flex-wrap items-center gap-2 overflow-hidden text-xs">
+                      {(repo.topLanguages.length ? repo.topLanguages : [repo.language || 'Mixed']).map((lang) => (
+                        <span key={`${repo.id}-tile-${lang}`} className="theme-chip shrink-0 rounded-full border px-3 py-1">
                           <span className="inline-flex items-center gap-1">
                             <span
                               className="inline-block h-2 w-2 rounded-full"
                               style={{ backgroundColor: languageColor(lang) }}
                               aria-hidden="true"
                             />
-                            {lang}
+                            <span>{lang}</span>
                           </span>
                         </span>
                       ))}
                     </div>
-                    <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-                      <span className="theme-muted text-xs">Updated {formatRelativeDate(repo.updated_at)}</span>
+                    <div className="mt-auto flex items-center justify-end gap-2 pt-3">
                       <button
                         type="button"
-                        onClick={() => setSelectedRepo(repo)}
-                        className="theme-btn-outline rounded-full border px-4 py-2 text-xs font-semibold"
+                        onClick={() => openRepoModal(repo)}
+                        className="theme-btn-outline shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-xs font-semibold"
                       >
                         Click For Details
                       </button>
@@ -892,7 +960,14 @@ function App() {
                     <div className="mt-4 flex flex-wrap gap-2">
                       {item.tags.map((tag) => (
                         <span key={tag} className="theme-chip rounded-full border px-3 py-1 text-xs">
-                          {tag}
+                          <span className="inline-flex items-center gap-1">
+                            <span
+                              className="inline-block h-2 w-2 rounded-full"
+                              style={{ backgroundColor: languageColor(tag) }}
+                              aria-hidden="true"
+                            />
+                            {tag}
+                          </span>
                         </span>
                       ))}
                     </div>
@@ -1016,9 +1091,12 @@ function App() {
       </main>
 
       {selectedRepo && (
-        <div className="fixed inset-0 z-[70] bg-[rgba(2,8,24,0.72)] backdrop-blur-sm" onClick={() => setSelectedRepo(null)}>
+        <div
+          className={`fixed inset-0 z-[70] backdrop-blur-sm transition-opacity duration-300 ${repoModalOpen ? 'bg-[rgba(2,8,24,0.72)] opacity-100' : 'bg-[rgba(2,8,24,0.72)] opacity-0 pointer-events-none'}`}
+          onClick={closeRepoModal}
+        >
           <section
-            className="theme-panel mx-auto mt-[8vh] w-[min(760px,92vw)] rounded-3xl border p-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] md:p-8"
+            className={`theme-panel mx-auto mt-[8vh] w-[min(760px,92vw)] rounded-3xl border p-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] transition-all duration-300 ease-out md:p-8 ${repoModalOpen ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-3 scale-[0.985] opacity-0'}`}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-4 flex items-start justify-between gap-4">
@@ -1028,12 +1106,12 @@ function App() {
                 </p>
                 <h3 className="mt-1 font-[Space_Grotesk] text-4xl font-bold leading-tight">{selectedRepo.name}</h3>
                 <p className="mt-2 text-sm font-semibold text-amber-300">
-                  {selectedRepo.stargazers_count} stars, {selectedRepo.forks_count} forks, {selectedRepo.language || 'Mixed'}
+                  {selectedRepo.language || 'Mixed'}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedRepo(null)}
+                onClick={closeRepoModal}
                 className="theme-btn-outline rounded-xl border px-3 py-1 text-sm font-semibold"
               >
                 X
@@ -1062,8 +1140,7 @@ function App() {
               </div>
             </div>
 
-            <div className="mt-6 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
-              <p className="theme-muted text-xs">Updated {formatRelativeDate(selectedRepo.updated_at)}</p>
+            <div className="mt-6 flex items-center justify-end gap-3 border-t border-[var(--border)] pt-5">
               <a href={selectedRepo.html_url} target="_blank" rel="noreferrer" className="theme-btn-primary rounded-full px-5 py-2 text-sm font-semibold">
                 View On GitHub
               </a>
@@ -1076,24 +1153,38 @@ function App() {
         type="button"
         onClick={() => setChatOpen((open) => !open)}
         aria-label={chatOpen ? 'Close AI Chat' : 'Open AI Chat'}
-        className="chat-fab theme-btn-primary fixed bottom-5 right-5 z-50 inline-flex h-14 w-14 items-center justify-center rounded-full shadow-[0_14px_35px_rgba(0,0,0,0.4)]"
+        className="chat-fab theme-btn-primary fixed bottom-5 right-5 z-[70] inline-flex h-14 w-14 items-center justify-center rounded-full shadow-[0_14px_35px_rgba(0,0,0,0.4)]"
       >
         <span className="chat-fab-ring" aria-hidden="true" />
-        <svg viewBox="0 0 24 24" className="h-6 w-6 text-white" aria-hidden="true">
-          <path
-            d="M20 4H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3v3l3.8-3H20a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 12H10l-1.5 1.2L7 18v-2H4V6h16v10Z"
-            fill="currentColor"
-          />
-        </svg>
+        {chatOpen ? (
+          <svg viewBox="0 0 24 24" className="h-6 w-6 text-white" aria-hidden="true">
+            <path
+              d="M6 6 18 18M18 6 6 18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+            />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" className="h-6 w-6 text-white" aria-hidden="true">
+            <path
+              d="M20 4H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3v3l3.8-3H20a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 12H10l-1.5 1.2L7 18v-2H4V6h16v10Z"
+              fill="currentColor"
+            />
+          </svg>
+        )}
       </button>
 
-      {chatOpen && (
-        <section className="theme-panel fixed bottom-20 right-4 z-50 flex h-[min(620px,calc(100vh-7rem))] w-[min(460px,calc(100%-1rem))] flex-col overflow-hidden rounded-2xl border shadow-[0_30px_70px_rgba(0,0,0,0.45)]">
+      <section
+        className={`theme-panel fixed bottom-24 right-4 z-50 flex h-[min(500px,calc(100vh-9.5rem))] w-[min(390px,calc(100%-1rem))] flex-col overflow-hidden rounded-2xl border shadow-[0_30px_70px_rgba(0,0,0,0.45)] transition-all duration-300 ease-out origin-bottom-right ${
+          chatOpen
+            ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
+            : 'opacity-0 translate-y-4 scale-95 pointer-events-none'
+        }`}
+      >
           <div className="theme-border flex items-center justify-between border-b px-5 py-3.5">
             <strong className="font-[Space_Grotesk] text-sm">Portfolio AI Assistant</strong>
-            <button type="button" onClick={() => setChatOpen(false)} className="theme-btn-outline rounded-full border px-2.5 py-1 text-xs">
-              Close
-            </button>
           </div>
 
           <div className="project-scroll min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
@@ -1122,8 +1213,7 @@ function App() {
             </button>
           </form>
 
-        </section>
-      )}
+      </section>
 
       <footer className="theme-border border-t py-6">
         <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center justify-center gap-x-6 gap-y-3 px-4 text-xs font-semibold uppercase tracking-[0.16em] md:px-8 xl:px-12">

@@ -7,86 +7,169 @@
     "phone": "647-781-8615",
     "linkedin": "https://www.linkedin.com/in/risanth-sivarajah/",
     "github": "https://github.com/risanth14",
-    "availability": "Seeking Software Engineering co-op opportunities for upcoming terms. Open to remote, hybrid, or relocation."
+    "availability": "Seeking Software Engineering co-op opportunities for upcoming terms. Open to remote, hybrid, or relocation.",
+    "work_authorization": "Authorized to work in Canada",
+    "strengths": [
+      "Full-stack development across frontend and backend systems",
+      "Building scalable APIs and optimizing performance",
+      "Translating business requirements into technical solutions",
+      "Strong communication of technical concepts to non-technical stakeholders",
+      "Experience integrating AI into applications"
+    ]
   },
+
+  "impact_metrics": [
+    {
+      "context": "SGMC Canada",
+      "metric": "Improved transaction success rate by 35% through Stripe integration and backend optimization"
+    },
+    {
+      "context": "SGMC Canada",
+      "metric": "Enhanced API performance and database efficiency across onboarding workflows"
+    },
+    {
+      "context": "Solora Tech",
+      "metric": "Reduced load times through optimized REST APIs and backend data flow design"
+    },
+    {
+      "context": "LEX Marketing",
+      "metric": "Improved SEO and mobile responsiveness across multiple websites"
+    }
+  ],
+
+  "domain_knowledge": [
+    "Risk systems architecture and data integrity controls",
+    "Full-stack dashboards for monitoring metrics and workflows",
+    "AI integration in applications (content generation, recommendations)",
+    "Cloud-based system design using AWS services",
+    "RESTful API design and microservices architecture",
+    "Data pipelines and backend performance optimization"
+  ],
+
+  "behavioral_stories": [
+    {
+      "title": "Handling feedback and improving communication",
+      "situation": "Manager noted I tried solving everything independently without asking enough questions",
+      "action": "Started proactively clarifying requirements early, aligning with stakeholders, and validating assumptions before building",
+      "result": "Reduced rework and improved delivery speed while strengthening team collaboration"
+    },
+    {
+      "title": "Building scalable systems",
+      "situation": "Initial implementations worked but did not consider long-term scalability",
+      "action": "Refactored APIs and database queries to handle growth and improve performance",
+      "result": "Improved system responsiveness and prepared platform for increased usage"
+    }
+  ],
+
+  "tools_proficiency": {
+    "frontend": ["React", "Next.js", "React Native", "TypeScript", "Tailwind CSS"],
+    "backend": ["Node.js", "Express", "FastAPI", "Flask", ".NET"],
+    "databases": ["PostgreSQL", "MySQL", "Supabase", "Firebase"],
+    "cloud": ["AWS (EC2, S3)", "GCP", "Azure"],
+    "devops": ["Docker", "Kubernetes", "CI/CD", "Terraform"],
+    "tools": ["Git", "Postman", "Jira", "Power BI"]
+  },
+
+  "project_details": [
+    {
+      "name": "SGMC Platform",
+      "architecture": "Full-stack system with Next.js frontend, Node.js backend, PostgreSQL database, deployed on AWS",
+      "features": [
+        "Role-based access control",
+        "Onboarding workflows",
+        "Payment integration with Stripe",
+        "Dashboard for user management"
+      ],
+      "technical_decisions": [
+        "Used PostgreSQL for relational data consistency",
+        "Implemented REST APIs for scalability",
+        "Optimized queries to reduce latency"
+      ]
+    },
+    {
+      "name": "RotateOps",
+      "architecture": "React frontend with Node.js backend and Supabase database",
+      "features": [
+        "Task rotation automation",
+        "Real-time updates",
+        "Slack integration for notifications"
+      ],
+      "technical_decisions": [
+        "Used Supabase for rapid backend setup",
+        "Integrated Slack API for workflow automation"
+      ]
+    },
+    {
+      "name": "NovaPrep",
+      "architecture": "React frontend with Express backend and AI integration",
+      "features": [
+        "Dynamic question generation",
+        "Adaptive learning system",
+        "Practice exam workflows"
+      ],
+      "technical_decisions": [
+        "Used AI APIs for content generation",
+        "Designed scalable REST APIs for user interaction"
+      ]
+    }
+  ],
+
   "chunks": [
     {
       "id": "education-ontario-tech",
       "category": "education",
       "title": "Ontario Tech University",
-      "tags": ["education", "university", "ontario tech", "software engineering", "co-op"],
+      "tags": ["education", "university", "software engineering", "co-op"],
       "text": "Bachelor of Engineering (BEng), Software Engineering Co-op (Honours), Ontario Tech University, Sep 2023 to Apr 2027, Oshawa ON. Coursework includes Algorithms, Data Structures, Databases, Object-Oriented Programming, Artificial Intelligence, Software Architecture, Computer Networks, and Systems Programming."
     },
     {
       "id": "experience-sgmc",
       "category": "experience",
       "title": "SGMC Canada - Full-Stack Developer",
-      "tags": ["sgmc", "react", "next.js", "node.js", "postgresql", "aws", "stripe"],
-      "text": "At SGMC Canada (Jan 2026 to Apr 2026, Toronto ON), engineered a full-stack recruitment platform using Next.js, React, Node.js, and PostgreSQL for onboarding flows, role-based access, and dashboards. Integrated Stripe payments and deployed services on AWS EC2 and S3, increasing transaction success rates by 35%. Optimized backend APIs and database queries to improve performance and scalability across workflows."
+      "tags": ["react", "next.js", "node.js", "postgresql", "aws", "stripe"],
+      "text": "Engineered a full-stack recruitment platform using Next.js, React, Node.js, and PostgreSQL. Built onboarding flows, role-based access control, and dashboards. Integrated Stripe payments and deployed services on AWS EC2 and S3, improving transaction success rates by 35%. Optimized backend APIs and database queries for scalability and performance."
     },
     {
       "id": "experience-solora",
       "category": "experience",
       "title": "Solora Tech - Full-Stack Developer",
-      "tags": ["solora", "react", "node.js", "express", "rest api"],
-      "text": "At Solora Tech (Sep 2025 to Dec 2025, Toronto ON), developed and deployed a scalable full-stack platform using React, Node.js, and Express with a responsive production UI. Designed and optimized REST APIs and backend data flows to reduce load times and improve responsiveness. Collaborated across frontend and backend integration to deliver reliable end-to-end features."
+      "tags": ["react", "node.js", "express", "rest api"],
+      "text": "Developed and deployed a scalable full-stack platform using React, Node.js, and Express. Designed REST APIs and optimized backend data flows to reduce load times and improve responsiveness. Delivered reliable end-to-end features through strong frontend-backend integration."
     },
     {
       "id": "experience-lex",
       "category": "experience",
       "title": "LEX Marketing Inc. - Web Developer",
-      "tags": ["lex marketing", "wordpress", "seo", "ui/ux", "responsive design"],
-      "text": "At LEX Marketing Inc. (May 2025 to Aug 2025, Toronto ON), redesigned existing websites with modern UI/UX principles to improve usability and engagement. Migrated websites from Weebly to WordPress to streamline content workflows. Improved mobile responsiveness and SEO, increasing accessibility and performance across devices."
-    },
-    {
-      "id": "experience-brazily",
-      "category": "experience",
-      "title": "Brazily Fitness Inc. - Web Developer",
-      "tags": ["brazily fitness", "frontend", "seo", "web design"],
-      "text": "At Brazily Fitness Inc. (Jan 2025 to Apr 2025, Toronto ON), built and launched a promotional website with service information and booking pathways. Improved content hierarchy and navigation flow, and strengthened technical SEO and maintainability."
-    },
-    {
-      "id": "experience-walmart",
-      "category": "experience",
-      "title": "Walmart - Stock Unloader Associate",
-      "tags": ["walmart", "operations", "inventory", "teamwork"],
-      "text": "At Walmart (Sep 2024 to Present, Whitby ON), supports daily store operations through freight unloading, pallet staging, and cross-department stocking. Maintains inventory accuracy through disciplined labeling and product placement. Works in a fast-paced environment with strong teamwork, time management, and safety-first execution."
+      "tags": ["wordpress", "seo", "ui/ux"],
+      "text": "Redesigned websites with modern UI/UX principles. Migrated platforms from Weebly to WordPress. Improved SEO and mobile responsiveness, increasing accessibility and performance."
     },
     {
       "id": "project-rotateops",
       "category": "project",
       "title": "RotateOps",
-      "tags": ["rotateops", "react", "node.js", "supabase", "slack api", "rest api"],
-      "text": "RotateOps is a workflow automation platform built with React, Node.js, and Supabase to manage rotation-based task assignment and reduce manual coordination. Implemented REST APIs and real-time updates for synchronization reliability. Integrated Slack API to automate notifications and improve team visibility."
+      "tags": ["react", "node.js", "supabase", "slack api"],
+      "text": "Built a workflow automation platform to manage rotation-based task assignment. Implemented REST APIs and real-time updates. Integrated Slack API to automate notifications and improve team visibility."
     },
     {
       "id": "project-novaprep",
       "category": "project",
       "title": "NovaPrep",
-      "tags": ["novaprep", "react", "node.js", "express", "aws", "ai"],
-      "text": "NovaPrep is an AI-powered exam platform using React and Node.js to generate dynamic practice content and personalized study support. Built scalable REST APIs and backend services with Express. Integrated AI-driven question generation and feedback systems to improve adaptive learning and retention."
+      "tags": ["react", "node.js", "ai"],
+      "text": "Developed an AI-powered exam platform with dynamic question generation and adaptive learning features. Built scalable backend services and integrated AI-driven feedback systems."
     },
     {
       "id": "project-forgefit",
       "category": "project",
       "title": "ForgeFit",
-      "tags": ["forgefit", "react native", "typescript", "supabase", "openai api", "fitness"],
-      "text": "ForgeFit is a cross-platform fitness app built with React Native and TypeScript for workout and nutrition tracking. Implemented authentication, storage, and data logic with Supabase. Added AI-powered nutrition insights with OpenAI API to provide personalized recommendations."
+      "tags": ["react native", "typescript", "supabase"],
+      "text": "Built a cross-platform fitness app with React Native and TypeScript. Implemented authentication, storage, and AI-powered nutrition insights."
     },
     {
       "id": "skills-summary",
       "category": "skills",
       "title": "Technical Skills",
-      "tags": ["skills", "languages", "frameworks", "cloud", "tools"],
-      "text": "Languages: C, C++, C#, Python, Java, JavaScript, SQL. Frameworks and libraries: React, Node.js, Next.js, Express, .NET, FastAPI, Flask, React Native, TypeScript. Cloud and DevOps: AWS, GCP, Azure, Docker, Kubernetes, Terraform, CI/CD. Databases and tools: PostgreSQL, MySQL, Supabase, Firebase, Git, Jira, Postman, Power BI."
-    },
-    {
-      "id": "contact-summary",
-      "category": "contact",
-      "title": "Contact",
-      "tags": ["contact", "email", "linkedin", "github", "phone"],
-      "text": "Contact Risanth at risanth14@gmail.com, 647-781-8615, LinkedIn https://www.linkedin.com/in/risanth-sivarajah/, and GitHub https://github.com/risanth14."
+      "tags": ["languages", "frameworks", "cloud"],
+      "text": "Languages: C, C++, C#, Python, Java, JavaScript, SQL. Frameworks: React, Node.js, Next.js, Express, .NET, FastAPI, Flask, React Native. Cloud: AWS, GCP, Azure. Tools: Docker, Kubernetes, CI/CD, PostgreSQL, MySQL, Git, Power BI."
     }
   ]
 }
-
