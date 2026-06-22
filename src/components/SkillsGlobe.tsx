@@ -164,6 +164,7 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
     const glowGeo = new THREE.SphereGeometry(0.4, 16, 16)
     const iconSprites: THREE.Sprite[] = []
     const loader = new THREE.TextureLoader()
+    loader.setCrossOrigin('anonymous')
 
     SKILLS.forEach((skill, i) => {
       const phi = Math.acos(1 - (2 * (i + 0.5)) / SKILLS.length)
@@ -177,27 +178,52 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
         color: 0xffffff,
         transparent: true,
         opacity: 0.95,
+        depthTest: false,
         depthWrite: false,
+        toneMapped: false,
       })
       const sprite = new THREE.Sprite(spriteMat)
       sprite.position.set(x, y, z)
+      sprite.renderOrder = 20
       sprite.scale.set(1, 1, 1)
       sprite.userData = { name: skill.name, baseColor: skill.color, baseScale: 1, category: skill.category, filterAlpha: 1 }
 
       loader.load(
         skill.logo,
         (texture) => {
+          const img = texture.image as HTMLImageElement | undefined
+          if (img?.width && img?.height) {
+            const canvas = document.createElement('canvas')
+            canvas.width = img.width
+            canvas.height = img.height
+
+            const context = canvas.getContext('2d')
+            if (context) {
+              context.drawImage(img, 0, 0)
+
+              const canvasTexture = new THREE.CanvasTexture(canvas)
+              canvasTexture.colorSpace = THREE.SRGBColorSpace
+              canvasTexture.minFilter = THREE.LinearFilter
+              canvasTexture.magFilter = THREE.LinearFilter
+              canvasTexture.generateMipmaps = false
+
+              spriteMat.map?.dispose()
+              spriteMat.map = canvasTexture
+              spriteMat.needsUpdate = true
+
+              const aspect = img.width / img.height
+              const base = isMobileViewport ? 0.86 : 1.08
+              sprite.scale.set(base * aspect, base, 1)
+              sprite.userData.baseScale = base
+              sprite.userData.aspect = aspect
+              texture.dispose()
+              return
+            }
+          }
+
           texture.colorSpace = THREE.SRGBColorSpace
           spriteMat.map = texture
           spriteMat.needsUpdate = true
-          const img = texture.image as HTMLImageElement | undefined
-          if (img?.width && img?.height) {
-            const aspect = img.width / img.height
-            const base = isMobileViewport ? 0.72 : 0.9
-            sprite.scale.set(base * aspect, base, 1)
-            sprite.userData.baseScale = base
-            sprite.userData.aspect = aspect
-          }
         },
         undefined,
         () => {
@@ -210,9 +236,12 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
         color: new THREE.Color(skill.color),
         transparent: true,
         opacity: 0,
+        depthTest: false,
+        depthWrite: false,
       })
       const glow = new THREE.Mesh(glowGeo, glowMat)
       glow.position.set(x, y, z)
+      glow.renderOrder = 10
       glow.userData = { isGlow: true, parentName: skill.name }
 
       globe.add(sprite)
@@ -323,8 +352,8 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
         const t = Math.max(0, Math.min(1, 1 - (dist - minD) / (maxD - minD)))
         const isHovered = hoveredRef.current === sprite.userData.name
 
-        let scale = t > 0.6 ? 0.85 + t * 0.7 : t > 0.3 ? 0.5 + t * 0.55 : 0.28 + t * 0.38
-        let opacity = t > 0.6 ? 0.92 + t * 0.08 : t > 0.3 ? 0.45 + t * 0.28 : 0.18 + t * 0.18
+        let scale = t > 0.6 ? 0.95 + t * 0.8 : t > 0.3 ? 0.62 + t * 0.62 : 0.34 + t * 0.45
+        let opacity = t > 0.6 ? 0.98 : t > 0.3 ? 0.6 + t * 0.26 : 0.28 + t * 0.2
 
         if (isHovered) {
           scale = isMobileViewport ? 1.55 : 1.9
@@ -349,7 +378,7 @@ export default function SkillsGlobe({ theme }: { theme: ThemeMode }) {
           const visibleAlpha = parentSprite?.userData?.filterAlpha ?? 0
           const isHovered = hoveredRef.current === parentName && visibleAlpha > 0.12
           ;(child as THREE.Mesh).scale.setScalar(isHovered ? 3.1 : 0)
-          ;((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = isHovered ? 0.2 : 0
+          ;((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = isHovered ? 0.32 : 0
         }
       })
 
