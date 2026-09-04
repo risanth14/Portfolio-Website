@@ -589,7 +589,7 @@ function App() {
           </nav>
 
           <div className="hidden items-center gap-4 md:flex">
-            <a className="theme-btn-primary rounded-full px-5 py-2 text-sm font-semibold" href="/skills/Resume_Risanth.pdf" download="Resume_Risanth.pdf">
+            <a className="theme-btn-primary rounded-full px-5 py-2 text-sm font-semibold" href="/skills/Risanth_Sivarajah_Resume.pdf" download="Risanth_Sivarajah_Resume.pdf">
               Resume
             </a>
             <button
@@ -679,7 +679,7 @@ function App() {
                   )}
                 </span>
               </button>
-              <a className="theme-btn-primary rounded-full px-4 py-2 text-center font-semibold" href="/skills/Resume_Risanth.pdf" download="Resume_Risanth.pdf">
+              <a className="theme-btn-primary rounded-full px-4 py-2 text-center font-semibold" href="/skills/Risanth_Sivarajah_Resume.pdf" download="Risanth_Sivarajah_Resume.pdf">
                 Resume
               </a>
             </div>
@@ -702,7 +702,7 @@ function App() {
               <a href="#projects" className="theme-btn-primary rounded-full px-5 py-2.5 font-semibold">
                 View Projects
               </a>
-              <a href="/skills/Resume_Risanth.pdf" target="_blank" rel="noreferrer" className="theme-btn-outline rounded-full border px-5 py-2.5 font-semibold">
+              <a href="/skills/Risanth_Sivarajah_Resume.pdf" target="_blank" rel="noreferrer" className="theme-btn-outline rounded-full border px-5 py-2.5 font-semibold">
                 View Resume
               </a>
               <a href="#contact" className="theme-btn-outline rounded-full border px-5 py-2.5 font-semibold">
@@ -926,7 +926,8 @@ function App() {
                 ))}
             </div>
           </div>
-        </section>        <section id="experience" className="pt-20">
+        </section>
+        <section id="experience" className="pt-20">
           <h2 className="font-[Space_Grotesk] text-3xl font-bold md:text-4xl">
             <span className="text-current">Work </span>
             <span className="skills-title-accent">Experience</span>
