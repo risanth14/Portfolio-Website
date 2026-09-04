@@ -65,18 +65,30 @@ const navItems = [
 const experienceTimeline = [
   {
     id: 'exp-01',
+    company: 'Canadian Golf Brands Alliance',
+    location: 'Toronto, ON',
+    period: 'May 2026 - Aug 2026',
+    bullets: [
+      'Refactored a legacy PHP/Symfony event and membership platform to improve maintainability and support multi-tenant workflows.',
+      'Implemented tenant-scoped registration controls and debugged schema, routing, and database issues to keep client data isolated.',
+      'Reviewed scheduling and engagement workflows and delivered an AI modernization roadmap for automation, recommendations, and analytics.',
+    ],
+    tags: ['PHP', 'Symfony', 'MySQL', 'Multi-Tenant', 'AI Strategy'],
+  },
+  {
+    id: 'exp-02',
     company: 'SGMC Canada',
     location: 'Toronto, ON',
     period: 'Jan 2026 - Apr 2026',
     bullets: [
-      'Engineered a full-stack recruitment platform using Next.js, React, Node.js, and PostgreSQL for onboarding, role-based access, and dashboard workflows.',
-      'Integrated Stripe payments and deployed services on AWS (EC2, S3) to support secure transactions and reliable release cycles.',
-      'Optimized backend APIs and query paths to improve responsiveness and scalability across core user workflows.',
+      'Built onboarding, role-based access, and admin dashboard workflows using Next.js, React, Node.js, and PostgreSQL.',
+      'Designed REST APIs, PostgreSQL queries, and authorization checks connecting frontend workflows with backend services.',
+      'Traced auth, API, and database defects across the UI-to-backend flow, fixed issues, and documented root causes.',
     ],
-    tags: ['Next.js', 'React', 'Node.js', 'PostgreSQL', 'AWS', 'Stripe'],
+    tags: ['Next.js', 'React', 'Node.js', 'PostgreSQL', 'REST APIs'],
   },
   {
-    id: 'exp-02',
+    id: 'exp-03',
     company: 'Solora Tech',
     location: 'Toronto, ON',
     period: 'Sep 2025 - Dec 2025',
@@ -88,7 +100,7 @@ const experienceTimeline = [
     tags: ['React', 'Node.js', 'Express', 'REST APIs'],
   },
   {
-    id: 'exp-03',
+    id: 'exp-04',
     company: 'LEX Marketing Inc.',
     location: 'Toronto, ON',
     period: 'May 2025 - Aug 2025',
@@ -100,7 +112,7 @@ const experienceTimeline = [
     tags: ['WordPress', 'SEO', 'Responsive Design', 'UI/UX'],
   },
   {
-    id: 'exp-04',
+    id: 'exp-05',
     company: 'Brazily Fitness Inc.',
     location: 'Toronto, ON',
     period: 'Jan 2025 - Apr 2025',
@@ -112,7 +124,7 @@ const experienceTimeline = [
     tags: ['Front-End Development', 'SEO', 'Web Content Strategy'],
   },
   {
-    id: 'exp-05',
+    id: 'exp-06',
     company: 'Walmart',
     location: 'Whitby, ON',
     period: 'Sep 2024 - Present',
@@ -780,8 +792,8 @@ function App() {
               <h3 className="mt-4 font-[Space_Grotesk] text-2xl font-semibold">Experience</h3>
               <p className="theme-muted mt-2 text-xs font-semibold uppercase tracking-[0.08em]">Full-Stack Development</p>
               <p className="theme-muted mt-4 text-sm leading-7">
-                Built production web platforms at SGMC Canada, Solora Tech, and LEX Marketing using React, Next.js,
-                Node.js, Express, PostgreSQL, and AWS.
+                Built production web platforms at Canadian Golf Brands Alliance, SGMC Canada, Solora Tech, and LEX
+                Marketing using PHP/Symfony, React, Next.js, Node.js, Express, PostgreSQL, and AWS.
               </p>
             </article>
 
